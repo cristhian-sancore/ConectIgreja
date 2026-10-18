@@ -3,6 +3,7 @@ import { Play, Sparkles, MapPin, ArrowRight, Heart } from 'lucide-react';
 
 interface HeroProps {
   churchName: string;
+  logoUrl?: string;
   pastorName?: string;
   welcomeMessage?: string;
   address?: string;
@@ -16,6 +17,7 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({
   churchName,
+  logoUrl,
   pastorName = 'Pastor Samuel Oliveira',
   welcomeMessage = 'Seja bem-vindo à nossa casa! Uma comunidade viva para você e toda a sua família.',
   address = 'Av. das Nações, 1500',
@@ -52,6 +54,13 @@ export const Hero: React.FC<HeroProps> = ({
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
+        {/* Logo Oficial se configurada */}
+        {logoUrl && (
+          <div className="mb-6 p-3 rounded-2xl bg-slate-900/90 border border-slate-700/80 shadow-2xl backdrop-blur-md hover:scale-105 transition-transform">
+            <img src={logoUrl} alt={churchName} className="h-16 w-auto max-w-[240px] object-contain mx-auto" />
+          </div>
+        )}
+
         {/* Badge Superior */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-panel border border-amber-500/30 text-amber-300 text-xs font-medium mb-6 shadow-lg shadow-amber-500/10 animate-fadeIn">
           <Sparkles className="w-4 h-4 text-amber-400" />

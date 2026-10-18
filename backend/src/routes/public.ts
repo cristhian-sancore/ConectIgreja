@@ -56,6 +56,11 @@ router.get('/churches', async (req, res) => {
         pixKey: true,
         pixType: true,
         pixRecipient: true,
+        logoUrl: true,
+        welcomeMessage: true,
+        youtubeLiveUrl: true,
+        instagramHandle: true,
+        facebookUrl: true,
       },
     });
     res.json(churches);

@@ -108,6 +108,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <Navbar
         churchName={church?.name || 'ConectIgreja'}
+        logoUrl={church?.logoUrl}
         phone={church?.phone}
         churches={isIndependentUrl ? [church].filter(Boolean) : churches}
         selectedChurchId={selectedChurchId}
@@ -117,6 +118,7 @@ export default function App() {
       <main className="flex-1">
         <Hero
           churchName={church?.name || 'ConectIgreja'}
+          logoUrl={church?.logoUrl}
           pastorName={church?.pastorName}
           welcomeMessage={church?.welcomeMessage}
           address={church?.address}

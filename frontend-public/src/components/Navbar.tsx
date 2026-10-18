@@ -3,6 +3,7 @@ import { Menu, X, Flame, Calendar, Users, HeartHandshake, ShieldCheck, Video, Me
 
 interface NavbarProps {
   churchName?: string;
+  logoUrl?: string;
   phone?: string;
   churches: Array<{ id: string; name: string; isMain: boolean }>;
   selectedChurchId: string;
@@ -11,6 +12,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   churchName = 'ConectIgreja',
+  logoUrl,
   phone,
   churches,
   selectedChurchId,
@@ -38,9 +40,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Logo & Seletor de Congregação */}
           <div className="flex items-center gap-3">
             <a href="#" className="flex items-center gap-2.5 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-amber-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform">
-                <Flame className="w-6 h-6 text-white" />
-              </div>
+              {logoUrl ? (
+                <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700/80 p-1 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform overflow-hidden">
+                  <img src={logoUrl} alt={churchName} className="w-full h-full object-contain" />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-amber-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:scale-105 transition-transform">
+                  <Flame className="w-6 h-6 text-white" />
+                </div>
+              )}
               <div className="flex flex-col">
                 <span className="font-heading font-extrabold text-xl tracking-tight text-white flex items-center gap-1.5">
                   {churchName}

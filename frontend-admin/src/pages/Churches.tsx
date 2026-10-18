@@ -15,6 +15,12 @@ import {
   ExternalLink,
   MessageSquare,
   Cake,
+  Sparkles,
+  Image,
+  Video,
+  Share2,
+  Palette,
+  Shield,
 } from 'lucide-react';
 
 interface ChurchesPageProps {
@@ -43,6 +49,7 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
     name: '',
     slug: '',
     isMain: false,
+    logoUrl: '',
     pastorName: '',
     phone: '',
     email: '',
@@ -67,6 +74,7 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
       name: '',
       slug: '',
       isMain: false,
+      logoUrl: '',
       pastorName: '',
       phone: '',
       email: '',
@@ -95,6 +103,7 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
       name: c.name,
       slug: c.slug,
       isMain: c.isMain,
+      logoUrl: c.logoUrl || '',
       pastorName: c.pastorName || '',
       phone: c.phone || '',
       email: c.email || '',
@@ -218,16 +227,32 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-indigo-400" />
-                    <span className="font-bold text-base text-white">{c.name}</span>
+                  <div className="flex items-center gap-3">
+                    {c.logoUrl ? (
+                      <div className="w-12 h-12 rounded-xl bg-slate-950 border border-amber-500/30 p-1 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+                        <img src={c.logoUrl} alt={c.name} className="w-full h-full object-contain" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600/30 to-amber-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                        <Building2 className="w-6 h-6" />
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-base text-white">{c.name}</span>
+                      </div>
+                      <span className="text-[11px] text-slate-400 block line-clamp-1 font-light">
+                        {c.welcomeMessage || 'Uma família para pertencer no amor de Cristo.'}
+                      </span>
+                    </div>
                   </div>
+
                   {c.isMain ? (
-                    <span className="text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded-full shrink-0 shadow-sm">
                       ★ Sede Matriz
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold uppercase bg-slate-800 text-slate-300 border border-slate-700 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[10px] font-bold uppercase bg-slate-800 text-slate-300 border border-slate-700 px-2.5 py-1 rounded-full shrink-0">
                       Filial {c.city}
                     </span>
                   )}
@@ -326,30 +351,45 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
               </div>
 
               {/* Botões de Ação */}
-              <div className="pt-4 mt-4 border-t border-slate-800 flex items-center justify-end gap-2">
-                <button
-                  onClick={() => handleOpenLinkModal(c)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30 text-xs font-semibold border border-emerald-500/30 transition-all hover:scale-102"
-                  title="Vincular membros diretamente a esta igreja"
+              <div className="pt-4 mt-4 border-t border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+                <a
+                  href={publicUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition-colors"
                 >
-                  <Users className="w-3.5 h-3.5" />
-                  Vincular Membros ({membersList.length})
-                </button>
-                <button
-                  onClick={() => handleOpenEdit(c)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600/30 text-xs font-semibold border border-indigo-500/30"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  Editar Dados & Membros
-                </button>
-                {!c.isMain && (
+                  <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Ver Site</span>
+                  <ExternalLink className="w-3 h-3 text-slate-500" />
+                </a>
+
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleDelete(c.id)}
-                    className="p-1.5 rounded-lg bg-rose-600/20 text-rose-400 hover:bg-rose-600/30 border border-rose-500/30"
+                    onClick={() => handleOpenLinkModal(c)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30 text-xs font-semibold border border-emerald-500/30 transition-all hover:scale-102"
+                    title="Vincular membros diretamente a esta congregação"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Users className="w-3.5 h-3.5" />
+                    <span>Membros ({membersList.length})</span>
                   </button>
-                )}
+                  <button
+                    onClick={() => handleOpenEdit(c)}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-black shadow-md shadow-amber-500/20 transition-all hover:scale-105"
+                    title="Editar nome da igreja, logo oficial e customizar o site público"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                    <span>Editar Site & Logo</span>
+                  </button>
+                  {!c.isMain && (
+                    <button
+                      onClick={() => handleDelete(c.id)}
+                      className="p-1.5 rounded-lg bg-rose-600/20 text-rose-400 hover:bg-rose-600/30 border border-rose-500/30"
+                      title="Excluir congregação"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -413,130 +453,381 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
         </div>
       )}
 
-      {/* Modal Criar / Editar Congregação */}
+      {/* Modal Criar / Editar Congregação & Editor do Site Público */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl animate-scaleUp max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-white mb-4">
-              {editingChurch ? 'Editar Congregação & Membros' : 'Cadastrar Nova Congregação'}
-            </h3>
-
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Nome da Igreja *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => {
-                      const name = e.target.value;
-                      const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/--+/g, '-');
-                      setFormData({ ...formData, name, slug: editingChurch ? formData.slug : slug });
-                    }}
-                    className="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs"
-                  />
+          <div className="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-3xl w-full p-6 shadow-2xl animate-scaleUp max-h-[92vh] overflow-y-auto">
+            {/* Topo do Modal */}
+            <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 p-0.5 flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
+                  <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-amber-400" />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-amber-400 mb-1">
-                    Slug da URL Independente *
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-black text-white">
+                      {editingChurch ? 'Editar Igreja, Logo Oficial & Site Público' : 'Cadastrar Nova Congregação'}
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      Super Admin
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Personalize o nome da congregação, a logo oficial e tudo o que é exibido no portal público dos membros e visitantes.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSave} className="space-y-6">
+              {/* SEÇÃO 1: IDENTIDADE VISUAL & LOGOMARCA OFICIAL */}
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-4">
+                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-400">
+                  <Palette className="w-4 h-4" />
+                  <span>1. Identidade Visual & Logo Oficial</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Nome Oficial da Igreja *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Igreja Conectada - Templo Central"
+                      value={formData.name}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/--+/g, '-');
+                        setFormData({ ...formData, name, slug: editingChurch ? formData.slug : slug });
+                      }}
+                      className="w-full bg-slate-900 text-white px-3.5 py-2.5 rounded-xl border border-slate-700 text-xs font-bold focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-amber-400 mb-1">
+                      Slug da URL Pública Independente *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: filial-esperanca"
+                      value={formData.slug}
+                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                      className="w-full bg-slate-900 text-amber-300 px-3.5 py-2.5 rounded-xl border border-slate-700 text-xs font-mono font-medium focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* LOGO OFICIAL COM PREVIEW */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Image className="w-3.5 h-3.5 text-indigo-400" />
+                      Logo Oficial da Igreja (URL da Imagem PNG / SVG / JPG)
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      Aparece no topo do site e na navbar
+                    </span>
                   </label>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <input
+                      type="url"
+                      placeholder="https://exemplo.com/logo-igreja.png"
+                      value={formData.logoUrl}
+                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3.5 py-2.5 rounded-xl border border-slate-700 text-xs font-mono focus:border-amber-500 focus:outline-none"
+                    />
+
+                    {/* Preview da Logo */}
+                    <div className="w-14 h-14 rounded-2xl bg-slate-900 border-2 border-amber-500/40 p-1 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
+                      {formData.logoUrl ? (
+                        <img
+                          src={formData.logoUrl}
+                          alt="Prévia da Logo"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            (e.target as any).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <span className="text-[9px] text-slate-500 text-center font-bold">SEM LOGO</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sugestões de Logos Rápidas para Teste */}
+                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] text-slate-400 font-medium">Modelos Prontos:</span>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, logoUrl: 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=300&q=80' })}
+                      className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-700 text-[10px] text-amber-300 font-semibold"
+                    >
+                      ✞ Cruz Dourada
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, logoUrl: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=300&q=80' })}
+                      className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-700 text-[10px] text-amber-300 font-semibold"
+                    >
+                      🔥 Chama Avivamento
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, logoUrl: 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?auto=format&fit=crop&w=300&q=80' })}
+                      className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-700 text-[10px] text-amber-300 font-semibold"
+                    >
+                      📖 Palavra & Luz
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, logoUrl: '' })}
+                      className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] text-slate-400"
+                    >
+                      ✕ Limpar Logo
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
                   <input
-                    type="text"
-                    required
-                    placeholder="Ex: filial-campinas"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    className="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs font-mono"
+                    type="checkbox"
+                    id="isMainCheckbox"
+                    checked={formData.isMain}
+                    onChange={(e) => setFormData({ ...formData, isMain: e.target.checked })}
+                    className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0"
                   />
+                  <label htmlFor="isMainCheckbox" className="text-xs text-slate-300 cursor-pointer">
+                    Definir esta igreja como <strong>Sede Matriz Estadual</strong> (Principal)
+                  </label>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* SEÇÃO 2: CONTEÚDO DO SITE PÚBLICO */}
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-4">
+                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-indigo-400">
+                  <Globe className="w-4 h-4" />
+                  <span>2. Conteúdo do Portal Público da Congregação</span>
+                </div>
+
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Pastor Responsável</label>
-                  <input
-                    type="text"
-                    value={formData.pastorName}
-                    onChange={(e) => setFormData({ ...formData, pastorName: e.target.value })}
-                    className="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs"
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Mensagem de Boas-Vindas / Slogan da Igreja
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Texto de acolhimento que aparece no topo da página pública..."
+                    value={formData.welcomeMessage}
+                    onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+                    className="w-full bg-slate-900 text-white p-3 rounded-xl border border-slate-700 text-xs leading-relaxed focus:border-indigo-500 focus:outline-none"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Telefone / WhatsApp</label>
-                  <input
-                    type="text"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs font-mono"
-                  />
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Pastor Presidente / Titular</label>
+                    <input
+                      type="text"
+                      placeholder="Pr. Nome Sobrenome"
+                      value={formData.pastorName}
+                      onChange={(e) => setFormData({ ...formData, pastorName: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">WhatsApp de Atendimento</label>
+                    <input
+                      type="text"
+                      placeholder="5565996772226"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">E-mail de Contato</label>
+                    <input
+                      type="email"
+                      placeholder="contato@igreja.com.br"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Endereço (Rua e Número)</label>
+                    <input
+                      type="text"
+                      placeholder="Av. Principal, 1234"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Bairro</label>
+                    <input
+                      type="text"
+                      placeholder="Centro"
+                      value={formData.neighborhood}
+                      onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Cidade / UF</label>
+                    <input
+                      type="text"
+                      placeholder="São Paulo - SP"
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Endereço</label>
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs"
-                  />
+              {/* SEÇÃO 3: MÍDIAS, TRANSMISSÕES AO VIVO & REDES SOCIAIS */}
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-4">
+                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-rose-400">
+                  <Video className="w-4 h-4" />
+                  <span>3. Transmissão Ao Vivo & Redes Sociais no Site</span>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Cidade</label>
-                  <input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs"
-                  />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Link do Culto Ao Vivo no YouTube
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      value={formData.youtubeLiveUrl}
+                      onChange={(e) => setFormData({ ...formData, youtubeLiveUrl: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      ID do Canal do YouTube (para listar pregações)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="UC_x5XG1OV2P6uZZ5FSM9Ttw"
+                      value={formData.youtubeChannelId}
+                      onChange={(e) => setFormData({ ...formData, youtubeChannelId: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Instagram Oficial da Igreja
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="@conectigreja.oficial"
+                      value={formData.instagramHandle}
+                      onChange={(e) => setFormData({ ...formData, instagramHandle: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Facebook da Igreja
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://facebook.com/conectigreja"
+                      value={formData.facebookUrl}
+                      onChange={(e) => setFormData({ ...formData, facebookUrl: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Chave PIX Oficial</label>
-                  <input
-                    type="text"
-                    value={formData.pixKey}
-                    onChange={(e) => setFormData({ ...formData, pixKey: e.target.value })}
-                    className="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs font-mono"
-                  />
+              {/* SEÇÃO 4: DÍZIMOS & CHAVE PIX NO SITE */}
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-4">
+                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-emerald-400">
+                  <QrCode className="w-4 h-4" />
+                  <span>4. Dízimos, Ofertas & Chave PIX Oficial</span>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Link Culto Ao Vivo YouTube</label>
-                  <input
-                    type="text"
-                    value={formData.youtubeLiveUrl}
-                    onChange={(e) => setFormData({ ...formData, youtubeLiveUrl: e.target.value })}
-                    className="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 text-xs"
-                  />
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Chave PIX Oficial</label>
+                    <input
+                      type="text"
+                      placeholder="email@igreja.com.br ou CNPJ"
+                      value={formData.pixKey}
+                      onChange={(e) => setFormData({ ...formData, pixKey: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Tipo da Chave</label>
+                    <select
+                      value={formData.pixType}
+                      onChange={(e) => setFormData({ ...formData, pixType: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs"
+                    >
+                      <option value="EMAIL">E-mail</option>
+                      <option value="CNPJ">CNPJ</option>
+                      <option value="TELEFONE">Telefone</option>
+                      <option value="CPF">CPF</option>
+                      <option value="ALEATORIA">Chave Aleatória</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Nome do Favorecido</label>
+                    <input
+                      type="text"
+                      placeholder="Igreja Conectada Central"
+                      value={formData.pixRecipient}
+                      onChange={(e) => setFormData({ ...formData, pixRecipient: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3 py-2 rounded-xl border border-slate-700 text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Seção de VINCULAR MEMBROS à Igreja */}
-              <div className="pt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-indigo-400 flex items-center gap-1.5">
+              {/* SEÇÃO 5: VINCULAR MEMBROS À CONGREGAÇÃO */}
+              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-indigo-400">
                     <Users className="w-4 h-4" />
-                    <span>Vincular Membros a esta Congregação</span>
-                  </label>
-                  <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                    {formData.memberIds.length} membro(s) selecionado(s)
+                    <span>5. Vincular Membros a esta Congregação</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                    {formData.memberIds.length} membros vinculados
                   </span>
                 </div>
 
-                {/* Filtro de Busca de Membros */}
                 <input
                   type="text"
-                  placeholder="Filtrar por nome ou telefone..."
+                  placeholder="Buscar membro por nome ou WhatsApp..."
                   value={memberSearch}
                   onChange={(e) => setMemberSearch(e.target.value)}
-                  className="w-full bg-slate-950 text-white px-3 py-1.5 rounded-xl border border-slate-800 text-xs mb-2 placeholder:text-slate-500"
+                  className="w-full bg-slate-900 text-white px-3 py-1.5 rounded-xl border border-slate-700 text-xs placeholder:text-slate-500"
                 />
 
-                <div className="flex items-center justify-between text-[11px] px-1 mb-2">
+                <div className="flex items-center justify-between text-[11px] px-1">
                   <span className="text-slate-400">Total no estado: {allMembers.length}</span>
                   <div className="flex items-center gap-2">
                     <button
@@ -566,9 +857,9 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
                   </div>
                 </div>
 
-                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 max-h-48 overflow-y-auto space-y-2">
+                <div className="p-2 bg-slate-900/80 rounded-xl border border-slate-800 max-h-40 overflow-y-auto space-y-1.5">
                   {allMembers.length === 0 ? (
-                    <span className="text-xs text-slate-500 block text-center py-4">Nenhum membro cadastrado no sistema.</span>
+                    <span className="text-xs text-slate-500 block text-center py-3">Nenhum membro cadastrado.</span>
                   ) : (
                     allMembers
                       .filter(
@@ -582,13 +873,13 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
                         return (
                           <label
                             key={m.id}
-                            className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer text-xs transition-colors ${
+                            className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer text-xs transition-colors ${
                               isLinked
                                 ? 'bg-indigo-950/40 border-indigo-500/40'
-                                : 'bg-slate-900/50 border-slate-800/80 hover:bg-slate-900'
+                                : 'bg-slate-950/60 border-slate-800 hover:bg-slate-800'
                             }`}
                           >
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-2">
                               <input
                                 type="checkbox"
                                 checked={isLinked}
@@ -604,19 +895,10 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
                                 }}
                                 className="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0"
                               />
-                              <div>
-                                <span className="font-semibold text-white block">{m.name}</span>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="text-[10px] text-emerald-400 font-mono">{m.phone}</span>
-                                  {m.church && (
-                                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300">
-                                      {m.church.id === editingChurch?.id ? '★ Já nesta filial' : `Pertence à: ${m.church.name}`}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
+                              <span className="font-semibold text-white">{m.name}</span>
+                              <span className="text-[10px] text-emerald-400 font-mono">({m.phone})</span>
                             </div>
-                            <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-800/70 px-2 py-0.5 rounded">
+                            <span className="text-[9px] uppercase font-bold text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
                               {m.role}
                             </span>
                           </label>
@@ -626,20 +908,36 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
-                >
-                  Salvar Congregação & Membros
-                </button>
+              {/* Botões do Rodapé */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+                {formData.slug && (
+                  <a
+                    href={getPublicUrl(formData.slug)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Visualizar Página Pública da Igreja</span>
+                  </a>
+                )}
+
+                <div className="flex items-center gap-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition-all hover:scale-105"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-slate-950 stroke-[3]" />
+                    <span>Salvar Alterações da Igreja & Site</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
