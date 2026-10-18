@@ -16,32 +16,39 @@ services:
     volumes:
       - conectigreja_db:/app/data
       - conectigreja_uploads:/app/uploads
-    networks:
-      - rede
     ports:
       - "4000:4000"
+    networks:
+      rede:
+        aliases:
+          - backend
+          - conectigreja_backend
 
   frontend-public:
     image: ghcr.io/cristhian-sancore/conectigreja-public:latest
     container_name: conectigreja_public
     restart: always
+    ports:
+      - "3000:80"
     depends_on:
       - backend
     networks:
-      - rede
-    ports:
-      - "3000:80"
+      rede:
+        aliases:
+          - conectigreja_public
 
   frontend-admin:
     image: ghcr.io/cristhian-sancore/conectigreja-admin:latest
     container_name: conectigreja_admin
     restart: always
+    ports:
+      - "5173:80"
     depends_on:
       - backend
     networks:
-      - rede
-    ports:
-      - "5173:80"
+      rede:
+        aliases:
+          - conectigreja_admin
 
 volumes:
   conectigreja_db:
