@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Bell, Zap, CheckCircle2, UserCheck, MessageSquare } from 'lucide-react';
+import { Building2, Bell, Zap, CheckCircle2, UserCheck, MessageSquare, LogOut } from 'lucide-react';
 
 interface ChurchItem {
   id: string;
@@ -20,6 +20,7 @@ interface HeaderProps {
     email?: string;
   };
   onSwitchUserRole?: (role: string, name: string, title: string) => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -35,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
     email: 'cristhian@conectigreja.com.br',
   },
   onSwitchUserRole,
+  onLogout,
 }) => {
   const [triggering, setTriggering] = useState(false);
   const [triggeredSuccess, setTriggeredSuccess] = useState(false);
@@ -204,9 +206,35 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </button>
               </div>
+
+              {onLogout && (
+                <div className="pt-2 mt-2 border-t border-slate-800">
+                  <button
+                    onClick={() => {
+                      setIsRoleDropdownOpen(false);
+                      onLogout();
+                    }}
+                    className="w-full text-left p-2 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 flex items-center gap-2 transition-colors font-bold"
+                  >
+                    <LogOut className="w-4 h-4 text-rose-400" />
+                    <span>Sair do Sistema (Logout)</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
+
+        {/* Botão Rápido de Sair */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="p-2 rounded-xl bg-slate-800/60 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700/60 hover:border-rose-500/30 transition-all text-xs font-semibold"
+            title="Encerrar sessão"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </header>
   );

@@ -17,6 +17,7 @@ import certificatesRoutes from './routes/certificates';
 import broadcastRoutes from './routes/broadcast';
 import reportsRoutes from './routes/reports';
 import uploadRoutes from './routes/upload';
+import authRoutes from './routes/auth';
 import { SchedulerService } from './services/scheduler';
 
 dotenv.config();
@@ -50,6 +51,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Registro de Rotas
+app.use('/api/auth', authRoutes);
 app.use('/api/churches', churchesRoutes);
 app.use('/api/members', membersRoutes);
 app.use('/api/finances', financesRoutes);

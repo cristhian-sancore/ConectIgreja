@@ -12,6 +12,7 @@ import { Prayer } from './pages/Prayer';
 import { UsersPage } from './pages/Users';
 import { Rosters } from './pages/Rosters';
 import { Certificates } from './pages/Certificates';
+import { Login } from './pages/Login';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -27,14 +28,23 @@ export default function App() {
   const [prayerRequests, setPrayerRequests] = useState<any[]>([]);
   const [evolutionStatus, setEvolutionStatus] = useState('open');
 
-  // Perfil do Usuário com Super Admin Estadual padrão
-  const [currentUser, setCurrentUser] = useState({
-    id: 'user-super-admin',
-    name: 'Cristhian Sancore',
-    email: 'cristhian@conectigreja.com.br',
-    role: 'SUPER_ADMIN_ESTADUAL',
-    title: 'Super Administrador Estadual',
+  // Controle de Sessão e Usuário Autenticado
+  const [currentUser, setCurrentUser] = useState<any>(() => {
+    try {
+      const saved = localStorage.getItem('conectigreja_user') || sessionStorage.getItem('conectigreja_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
+
+  const handleLogout = () => {
+    localStorage.removeItem('conectigreja_user');
+    localStorage.removeItem('conectigreja_token');
+    sessionStorage.removeItem('conectigreja_user');
+    sessionStorage.removeItem('conectigreja_token');
+    setCurrentUser(null);
+  };
 
   const loadAllData = async () => {
     try {
@@ -109,6 +119,18 @@ export default function App() {
     }
   };
 
+  // Se não estiver autenticado, exibe a tela de Login
+  if (!currentUser) {
+    return (
+      <Login
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          if (user.churchId) setSelectedChurchId(user.churchId);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100">
       {/* Barra Lateral de Navegação */}
@@ -129,8 +151,9 @@ export default function App() {
           onTriggerDailyBirthdays={handleTriggerDailyBirthdays}
           currentUser={currentUser}
           onSwitchUserRole={(role, name, title) =>
-            setCurrentUser((prev) => ({ ...prev, role, name, title }))
+            setCurrentUser((prev: any) => ({ ...prev, role, name, title }))
           }
+          onLogout={handleLogout}
         />
 
         <main className="flex-1 p-6 sm:p-8 max-w-7xl w-full mx-auto">
