@@ -29,3 +29,8 @@ dev.db-journal
 .idea/
 .DS_Store
 Thumbs.db
+
+# Uploads dinamicos de teste
+backend/uploads/logos/logo-*
+backend/uploads/banners/banner-*
+

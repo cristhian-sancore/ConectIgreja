@@ -25,9 +25,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setInfoMessage(null);
     setIsLoading(true);
 
     try {
@@ -58,10 +61,16 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleQuickLogin = (demoEmail: string, demoPass: string) => {
+  const handleSelectEmail = (demoEmail: string) => {
     setEmail(demoEmail);
-    setPassword(demoPass);
+    setPassword(''); // A senha NUNCA é preenchida
     setErrorMessage(null);
+    setInfoMessage(`E-mail ${demoEmail} selecionado. Digite sua senha para entrar.`);
+  };
+
+  const handleForgotPassword = () => {
+    setErrorMessage(null);
+    setInfoMessage('Para redefinir sua senha, solicite suporte ao Super Administrador ou ao pastor responsável da sua unidade.');
   };
 
   return (
@@ -103,11 +112,18 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             </p>
           </div>
 
-          {/* Alerta de Erro */}
+          {/* Alertas */}
           {errorMessage && (
             <div className="mb-5 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5 animate-shake">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
               <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {infoMessage && (
+            <div className="mb-5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-amber-400" />
+              <span>{infoMessage}</span>
             </div>
           )}
 
@@ -133,9 +149,8 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
-                <span>Senha</span>
-                <span className="text-[10px] text-slate-500">Padrão: 123456 ou admin</span>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Senha
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-3 text-slate-400">
@@ -144,9 +159,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
-                  placeholder="••••••••"
+                  placeholder="Digite sua senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                   className="w-full bg-slate-950 text-white pl-10 pr-10 py-2.5 rounded-xl border border-slate-700 text-xs focus:border-amber-500 focus:outline-none transition-all placeholder:text-slate-600 font-mono"
                 />
                 <button
@@ -171,7 +187,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               </label>
               <button
                 type="button"
-                onClick={() => handleQuickLogin('admin@conectigreja.com.br', 'admin')}
+                onClick={handleForgotPassword}
                 className="text-xs text-amber-400 hover:text-amber-300 font-medium transition-colors"
               >
                 Esqueci a senha
@@ -197,16 +213,21 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             </button>
           </form>
 
-          {/* Perfis de Acesso Rápido / Demonstração */}
+          {/* Perfis de Acesso Rápido (Apenas E-mail) */}
           <div className="mt-7 pt-6 border-t border-slate-800">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block text-center mb-3">
-              Perfis de Acesso Rápido para Teste
-            </span>
+            <div className="text-center mb-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Preenchimento Rápido de E-mail
+              </span>
+              <span className="text-[10px] text-slate-500">
+                A senha nunca é pré-preenchida e deve ser digitada pelo usuário.
+              </span>
+            </div>
 
             <div className="grid grid-cols-1 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickLogin('admin@conectigreja.com.br', 'admin')}
+                onClick={() => handleSelectEmail('admin@conectigreja.com.br')}
                 className="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/40 text-left transition-all flex items-center justify-between group"
               >
                 <div className="flex items-center gap-2.5">
@@ -223,13 +244,13 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   </div>
                 </div>
                 <span className="text-[10px] text-amber-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                  Preencher →
+                  Usar E-mail →
                 </span>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('marcos.campinas@conectigreja.cristhiansancore.com.br', '123456')}
+                onClick={() => handleSelectEmail('marcos.campinas@conectigreja.cristhiansancore.com.br')}
                 className="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/40 text-left transition-all flex items-center justify-between group"
               >
                 <div className="flex items-center gap-2.5">
@@ -246,7 +267,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                   </div>
                 </div>
                 <span className="text-[10px] text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                  Preencher →
+                  Usar E-mail →
                 </span>
               </button>
             </div>
