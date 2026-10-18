@@ -50,10 +50,10 @@ export const Schedule: React.FC<ScheduleProps> = ({ events = [], churchAddress =
       });
 
       const data = await res.json();
-      if (res.ok && data.id) {
-        setRegSuccess(data);
+      if (res.ok && (data.success || data.id || data.registration)) {
+        setRegSuccess(data.registration || data);
       } else {
-        alert(`Não foi possível concluir a inscrição: ${data.error || 'Erro desconhecido'}`);
+        alert(`Não foi possível concluir a inscrição: ${data.error || data.message || 'Erro ao processar inscrição'}`);
       }
     } catch (err: any) {
       alert(`Erro: ${err.message}`);

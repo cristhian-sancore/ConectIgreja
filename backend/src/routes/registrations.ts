@@ -73,8 +73,10 @@ router.post('/', async (req, res) => {
         instance: config.instanceName,
       } : undefined;
 
-      const formattedDate = event.startDate.split('-').reverse().join('/');
-      const confirmMsg = `Graça e Paz, ${name}! 🎉✨\n\nSua inscrição para o evento *${event.title}* na igreja *${event.church.name}* foi confirmada com sucesso!\n\n📅 *Data:* ${formattedDate} ${event.startTime ? `às ${event.startTime}` : ''}\n📍 *Local:* ${event.location || event.church.address || 'Templo da Igreja'}\n\nEstamos ansiosos para receber você e sua família. Qualquer dúvida, responda a esta mensagem. Deus te abençoe! 🙏🕊️`;
+      const churchName = event.church?.name || 'Igreja Conectada';
+      const churchAddr = event.location || event.church?.address || 'Templo da Igreja';
+      const formattedDate = event.startDate ? event.startDate.split('-').reverse().join('/') : 'Data confirmada';
+      const confirmMsg = `Graça e Paz, ${name}! 🎉✨\n\nSua inscrição para o evento *${event.title}* na igreja *${churchName}* foi confirmada com sucesso!\n\n📅 *Data:* ${formattedDate} ${event.startTime ? `às ${event.startTime}` : ''}\n📍 *Local:* ${churchAddr}\n\nEstamos ansiosos para receber você e sua família. Qualquer dúvida, responda a esta mensagem. Deus te abençoe! 🙏🕊️`;
 
       await EvolutionService.sendTextMessage({
         number: phone,
@@ -86,8 +88,13 @@ router.post('/', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Inscrição realizada com sucesso!',
+      id: registration.id,
+      name: registration.name,
+      phone: registration.phone,
+      email: registration.email,
+      status: registration.status,
       registration,
+      message: 'Inscrição realizada com sucesso!',
     });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
