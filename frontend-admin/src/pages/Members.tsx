@@ -10,6 +10,10 @@ import {
   Trash2,
   Filter,
   CheckCircle2,
+  CreditCard,
+  QrCode,
+  Printer,
+  Send,
 } from 'lucide-react';
 
 interface MembersPageProps {
@@ -31,6 +35,7 @@ export const Members: React.FC<MembersPageProps> = ({
   const [roleFilter, setRoleFilter] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<any>(null);
+  const [viewingCardMember, setViewingCardMember] = useState<any>(null);
 
   // Estado do formulário
   const [formData, setFormData] = useState({
@@ -227,6 +232,15 @@ export const Members: React.FC<MembersPageProps> = ({
                   <td className="px-5 py-4 text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <button
+                        title="Visualizar Credencial / Carteirinha Digital"
+                        onClick={() => setViewingCardMember(m)}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 text-[11px] font-bold transition-all hover:scale-105"
+                      >
+                        <CreditCard className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Carteirinha</span>
+                      </button>
+
+                      <button
                         title="Enviar Mensagem de Parabéns"
                         onClick={() => onSendWhatsApp(m.id, 'BIRTHDAY')}
                         className="p-1.5 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30"
@@ -406,6 +420,154 @@ export const Members: React.FC<MembersPageProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Carteirinha Digital de Membro com QR Code */}
+      {viewingCardMember && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl relative">
+            {/* Top Bar */}
+            <div className="flex items-center justify-between p-4 bg-slate-950/80 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-amber-400" />
+                <h3 className="text-sm font-bold text-white">Credencial Eclesiástica Digital</h3>
+              </div>
+              <button
+                onClick={() => setViewingCardMember(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 text-xs font-semibold"
+              >
+                ✕ Fechar
+              </button>
+            </div>
+
+            {/* Cartão Visual - Estilo Crachá Premium */}
+            <div className="p-6">
+              <div
+                id="digital-member-card"
+                className="relative rounded-2xl overflow-hidden p-6 border border-amber-500/30 shadow-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white"
+              >
+                {/* Glow decorativo */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+
+                {/* Cabeçalho do Cartão */}
+                <div className="flex items-center justify-between border-b border-slate-700/60 pb-3 mb-4">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-amber-400 block">
+                      CONECTIGREJA ESTADUAL
+                    </span>
+                    <h4 className="font-extrabold text-sm text-slate-100">
+                      {viewingCardMember.church?.name || 'Igreja Local'}
+                    </h4>
+                  </div>
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-indigo-600 flex items-center justify-center shadow-lg font-black text-xs text-white">
+                    ✞
+                  </div>
+                </div>
+
+                {/* Conteúdo Central */}
+                <div className="flex gap-4 items-center mb-4">
+                  <div className="w-20 h-24 rounded-xl bg-slate-800 border-2 border-amber-500/40 overflow-hidden flex flex-col items-center justify-center text-slate-400 shadow-inner flex-shrink-0">
+                    <span className="text-2xl font-bold text-white">
+                      {viewingCardMember.name.charAt(0)}
+                    </span>
+                    <span className="text-[9px] text-slate-400 uppercase tracking-wider mt-1">FOTO</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-slate-400 uppercase font-semibold">Nome do Membro</div>
+                    <div className="font-black text-base text-white truncate">{viewingCardMember.name}</div>
+                    
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        {viewingCardMember.role}
+                      </span>
+                      <span className="text-[10px] text-emerald-400 font-mono font-bold">
+                        ● ATIVO
+                      </span>
+                    </div>
+
+                    <div className="mt-2 text-[11px] text-slate-400">
+                      {viewingCardMember.cell?.name ? `Célula: ${viewingCardMember.cell.name}` : 'Membro Geral'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informações de Registro e QR Code */}
+                <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 mb-4">
+                  <div>
+                    <span className="text-[10px] text-slate-500 block uppercase">Matrícula / ID</span>
+                    <span className="font-mono text-white font-bold">
+                      MEM-{viewingCardMember.id.slice(0, 8).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 block uppercase">Batismo nas Águas</span>
+                    <span className="text-indigo-300 font-medium">
+                      {viewingCardMember.baptismDate ? viewingCardMember.baptismDate.split('-').reverse().join('/') : 'Não informado'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 block uppercase">Nascimento</span>
+                    <span className="text-slate-300 font-medium">
+                      {viewingCardMember.birthDate ? viewingCardMember.birthDate.split('-').reverse().join('/') : '-'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 block uppercase">Telefone</span>
+                    <span className="text-emerald-400 font-mono font-medium">
+                      {viewingCardMember.phone}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Rodapé da Carteirinha com QR Code de Validação Oficial */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                  <div className="text-[10px] text-slate-400">
+                    <span className="block font-semibold text-slate-300">Autenticidade Verificada</span>
+                    <span className="text-slate-500">Aponte a câmera para checar status</span>
+                  </div>
+                  <div className="bg-white p-1 rounded-lg shadow-md">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(
+                        `https://conectigreja.cristiansancore.com.br/validar?membro=${viewingCardMember.id}&igreja=${viewingCardMember.church?.id}`
+                      )}`}
+                      alt="QR Code Carteirinha"
+                      className="w-14 h-14"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Botões de Ação */}
+              <div className="flex gap-2 mt-5">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors"
+                >
+                  <Printer className="w-4 h-4 text-slate-400" />
+                  <span>Imprimir / Salvar PDF</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const msg = `Olá ${viewingCardMember.name}! Segue sua *Credencial Digital Eclesiástica* da ${viewingCardMember.church?.name || 'Igreja'}:\n\n` +
+                      `🪪 *Matrícula:* MEM-${viewingCardMember.id.slice(0, 8).toUpperCase()}\n` +
+                      `✝ *Cargo:* ${viewingCardMember.role}\n` +
+                      `⛪ *Congregação:* ${viewingCardMember.church?.name}\n\n` +
+                      `Apresente sua carteirinha na secretaria ou nos eventos oficiais! Deus abençoe!`;
+                    await onSendWhatsApp(viewingCardMember.id, 'CUSTOM', msg);
+                    alert(`Carteirinha digital enviada via WhatsApp para ${viewingCardMember.phone}!`);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors shadow-lg shadow-emerald-900/30"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Enviar no WhatsApp</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

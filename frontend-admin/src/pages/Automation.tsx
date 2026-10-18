@@ -13,6 +13,8 @@ import {
   Phone,
   Sparkles,
   Shield,
+  Users,
+  Radio,
 } from 'lucide-react';
 
 interface AutomationPageProps {
@@ -75,6 +77,12 @@ export const Automation: React.FC<AutomationPageProps> = ({
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<any>(null);
   const [loadingQr, setLoadingQr] = useState(false);
+
+  // Disparos em Massa Segmentados
+  const [broadcastRole, setBroadcastRole] = useState('TODOS');
+  const [broadcastText, setBroadcastText] = useState('Graça e paz, {nome}! Convidamos você e sua família da congregação {igreja} para estarem conosco no culto especial desta semana. Sua presença é essencial!');
+  const [broadcasting, setBroadcasting] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState<any>(null);
 
   const selectedChurch = churches.find((c) => c.id === activeChurchId) || churches[0];
 
@@ -243,6 +251,42 @@ export const Automation: React.FC<AutomationPageProps> = ({
       alert(`Processamento da cidade ${selectedChurch?.name} concluído: ${data.count} mensagens enviadas.`);
     } catch (err: any) {
       alert(`Erro: ${err.message}`);
+    }
+  };
+
+  const handleSendBroadcast = async () => {
+    if (!broadcastText.trim()) {
+      alert('Digite a mensagem a ser disparada!');
+      return;
+    }
+
+    if (!confirm(`Confirma o envio deste comunicado via WhatsApp para os membros do filtro [${broadcastRole}] da igreja ${selectedChurch?.name}?`)) {
+      return;
+    }
+
+    setBroadcasting(true);
+    setBroadcastResult(null);
+    try {
+      const res = await fetch('/api/broadcast/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          churchId: activeChurchId,
+          targetRole: broadcastRole,
+          text: broadcastText,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setBroadcastResult(data);
+        alert(`Disparo concluído com sucesso! ${data.sentCount} de ${data.totalTargets} mensagens enviadas pelo WhatsApp exclusivo da filial.`);
+      } else {
+        alert(`Atenção: ${data.error || 'Erro ao processar disparo.'}`);
+      }
+    } catch (err: any) {
+      alert(`Erro no envio: ${err.message}`);
+    } finally {
+      setBroadcasting(false);
     }
   };
 
@@ -572,6 +616,113 @@ export const Automation: React.FC<AutomationPageProps> = ({
             </button>
           </div>
         </form>
+      </div>
+
+      {/* Card de Disparos em Massa Segmentados no WhatsApp */}
+      <div className="p-6 rounded-2xl admin-card border border-slate-800 bg-gradient-to-br from-slate-900 to-indigo-950/40 space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <Radio className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                Disparos em Massa Segmentados no WhatsApp
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  {selectedChurch?.city || 'Filial'}
+                </span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Envie comunicados pastorais, convocações de obreiros ou avisos urgentes usando o número exclusivo de <strong>{selectedChurch?.name}</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
+              Segmentar Público-Alvo:
+            </label>
+            <select
+              value={broadcastRole}
+              onChange={(e) => setBroadcastRole(e.target.value)}
+              className="w-full bg-slate-950 text-white px-3.5 py-2.5 rounded-xl border border-slate-800 text-xs focus:border-indigo-500"
+            >
+              <option value="TODOS">👥 Todos os Membros Ativos da Igreja</option>
+              <option value="PASTOR">👑 Pastores e Bispos</option>
+              <option value="PRESBITERO">⭐ Presbíteros</option>
+              <option value="DIACONO">🛡️ Diáconos e Cooperadores</option>
+              <option value="LIDER_CELULA">🏠 Líderes de Célula</option>
+              <option value="MUSICO">🎵 Equipe de Louvor e Músicos</option>
+              <option value="MEMBRO">👤 Somente Membros Gerais</option>
+              <option value="VISITANTE">👋 Apenas Visitantes Cadastrados</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
+              Tags Disponíveis:
+            </label>
+            <div className="flex gap-2 text-xs">
+              <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-amber-400 font-mono text-[11px]">
+                &#123;nome&#125; (Nome do Membro)
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-indigo-400 font-mono text-[11px]">
+                &#123;igreja&#125; (Nome da Filial)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-slate-300 mb-1">
+            Mensagem do Comunicado Pastoral:
+          </label>
+          <textarea
+            rows={4}
+            value={broadcastText}
+            onChange={(e) => setBroadcastText(e.target.value)}
+            placeholder="Digite o texto do aviso ou comunicado..."
+            className="w-full bg-slate-950 text-white p-3 rounded-xl border border-slate-800 text-xs font-mono leading-relaxed focus:outline-none focus:border-emerald-500"
+          />
+        </div>
+
+        <div className="flex items-center justify-between pt-2">
+          <span className="text-[11px] text-slate-400">
+            * O envio respeitará os limites da Evolution API e enviará individualmente para cada número.
+          </span>
+          <button
+            type="button"
+            disabled={broadcasting}
+            onClick={handleSendBroadcast}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/30 transition-all hover:scale-105 disabled:opacity-50"
+          >
+            <Send className="w-4 h-4" />
+            {broadcasting ? 'Disparando no WhatsApp...' : 'Disparar Comunicado Segmentado'}
+          </button>
+        </div>
+
+        {/* Resultado do Disparo */}
+        {broadcastResult && (
+          <div className="mt-4 p-4 rounded-xl bg-slate-950 border border-emerald-500/40 text-xs">
+            <div className="flex items-center justify-between text-emerald-400 font-bold mb-2">
+              <span>Relatório de Envio Concluído</span>
+              <span>{broadcastResult.sentCount} / {broadcastResult.totalTargets} Entregues</span>
+            </div>
+            <div className="max-h-36 overflow-y-auto space-y-1 divide-y divide-slate-800">
+              {broadcastResult.dispatches?.map((d: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between py-1 text-slate-300 text-[11px]">
+                  <span className="font-medium text-white">{d.memberName} ({d.role})</span>
+                  <span className="font-mono text-slate-400">{d.phone}</span>
+                  <span className={d.status === 'ENVIADO' ? 'text-emerald-400 font-bold' : 'text-rose-400'}>
+                    {d.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal Criar Instância */}

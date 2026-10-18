@@ -6,6 +6,11 @@ async function main() {
   console.log('🌱 Iniciando seed do banco de dados ConectIgreja...');
 
   // Limpa registros anteriores para evitar duplicatas em re-execução
+  await prisma.rosterAssignment.deleteMany();
+  await prisma.roster.deleteMany();
+  await prisma.ministry.deleteMany();
+  await prisma.eventRegistration.deleteMany();
+  await prisma.certificate.deleteMany();
   await prisma.prayerRequest.deleteMany();
   await prisma.transaction.deleteMany();
   await prisma.cellReport.deleteMany();
@@ -457,7 +462,171 @@ async function main() {
     ],
   });
 
-  console.log('✅ Banco de dados populado com sucesso!');
+  // 9. Ministérios e Escalas de Culto
+  const minLouvor = await prisma.ministry.create({
+    data: {
+      churchId: sede.id,
+      name: 'Ministério de Louvor & Adoração',
+      description: 'Responsável pela adoração congregacional, ensaios e ministração nos cultos.',
+      leaderName: 'Gabriel Costa',
+      leaderPhone: '5511991234567',
+      color: '#6366f1',
+    },
+  });
+
+  const minMidia = await prisma.ministry.create({
+    data: {
+      churchId: sede.id,
+      name: 'Mídia, Som & Transmissão',
+      description: 'Sonoplastia, transmissão do YouTube ao vivo e projeção das letras de louvor.',
+      leaderName: 'Matheus Rocha',
+      leaderPhone: '5511999992222',
+      color: '#06b6d4',
+    },
+  });
+
+  const minKids = await prisma.ministry.create({
+    data: {
+      churchId: sede.id,
+      name: 'ConectKids (Ministério Infantil)',
+      description: 'Educação cristã por faixa etária, contação de histórias bíblicas e acolhimento.',
+      leaderName: 'Débora Silveira',
+      leaderPhone: '5511982345678',
+      color: '#f59e0b',
+    },
+  });
+
+  const minDiaconato = await prisma.ministry.create({
+    data: {
+      churchId: sede.id,
+      name: 'Recepção, Diaconato & Portaria',
+      description: 'Boas-vindas na porta do templo, acomodação de visitantes e apoio à Ceia do Senhor.',
+      leaderName: 'Antônio Carlos de Souza',
+      leaderPhone: '5511995554444',
+      color: '#10b981',
+    },
+  });
+
+  // Escala para o próximo culto de domingo
+  const escalaDomingo = await prisma.roster.create({
+    data: {
+      churchId: sede.id,
+      ministryId: minLouvor.id,
+      title: 'Culto de Celebração & Ceia do Senhor',
+      date: '2026-10-25',
+      time: '19:00',
+      notes: 'Chegada às 18:00 para passagem de som e oração com toda a equipe.',
+    },
+  });
+
+  await prisma.rosterAssignment.createMany({
+    data: [
+      {
+        rosterId: escalaDomingo.id,
+        memberId: m1.id,
+        roleInRoster: 'Violão & Voz Principal',
+        status: 'CONFIRMADO',
+      },
+      {
+        rosterId: escalaDomingo.id,
+        memberId: m2.id,
+        roleInRoster: 'Backing Vocal & Ministração',
+        status: 'CONFIRMADO',
+      },
+      {
+        rosterId: escalaDomingo.id,
+        memberId: m3.id,
+        roleInRoster: 'Bateria',
+        status: 'CONFIRMADO',
+      },
+    ],
+  });
+
+  // Escala do Kids
+  const escalaKids = await prisma.roster.create({
+    data: {
+      churchId: sede.id,
+      ministryId: minKids.id,
+      title: 'ConectKids - Culto da Família',
+      date: '2026-10-25',
+      time: '19:00',
+      notes: 'Tema da aula: A Arca de Noé e a Fidelidade de Deus.',
+    },
+  });
+
+  await prisma.rosterAssignment.create({
+    data: {
+      rosterId: escalaKids.id,
+      memberId: m2.id,
+      roleInRoster: 'Tia da Sala Maternal (2-4 anos)',
+      status: 'CONFIRMADO',
+    },
+  });
+
+  // 10. Certificados Eclesiásticos
+  await prisma.certificate.createMany({
+    data: [
+      {
+        churchId: sede.id,
+        memberId: m2.id,
+        type: 'BATISMO',
+        title: 'Certificado de Batismo nas Águas',
+        recipientName: 'Débora Silveira',
+        date: '2026-10-18',
+        pastorName: 'Pastor Samuel Oliveira',
+        verse: '"Fomos, pois, sepultados com ele na morte pelo batismo; para que, como Cristo ressuscitou dentre os mortos, assim andemos nós também em novidade de vida." (Romanos 6:4)',
+      },
+      {
+        churchId: sede.id,
+        type: 'APRESENTACAO_BEBE',
+        title: 'Certificado de Apresentação ao Senhor',
+        recipientName: 'Enzo Gabriel Duarte',
+        date: '2026-09-15',
+        pastorName: 'Pastor Samuel Oliveira',
+        verse: '"Ensina a criança no caminho em que deve andar, e até quando envelhecer não se desviará dele." (Provérbios 22:6)',
+        notes: 'Filho amado de Mariana Duarte e Carlos Duarte.',
+      },
+    ],
+  });
+
+  // 11. Inscrições em Eventos
+  const evConf = await prisma.event.findFirst({
+    where: { churchId: sede.id, title: { contains: 'Aviva' } },
+  });
+
+  if (evConf) {
+    await prisma.event.update({
+      where: { id: evConf.id },
+      data: {
+        maxAttendees: 200,
+        allowRegistration: true,
+        registrationFee: 0,
+      },
+    });
+
+    await prisma.eventRegistration.createMany({
+      data: [
+        {
+          eventId: evConf.id,
+          churchId: sede.id,
+          name: 'Renata Albuquerque',
+          phone: '5511988881122',
+          email: 'renata.alb@gmail.com',
+          status: 'CONFIRMADA',
+        },
+        {
+          eventId: evConf.id,
+          churchId: sede.id,
+          name: 'Felipe Santana',
+          phone: '5511977773344',
+          email: 'felipe.s@gmail.com',
+          status: 'CONFIRMADA',
+        },
+      ],
+    });
+  }
+
+  console.log('✅ Banco de dados populado com sucesso com Ministérios, Escalas, Certificados e Inscrições!');
 }
 
 main()

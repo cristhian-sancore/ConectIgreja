@@ -38,6 +38,10 @@ model Church {
   prayerRequests     PrayerRequest[]
   automations        AutomationConfig?
   users              User[]
+  ministries         Ministry[]
+  rosters            Roster[]
+  eventRegistrations EventRegistration[]
+  certificates       Certificate[]
 }
 
 model Member {
@@ -58,9 +62,10 @@ model Member {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  church         Church         @relation(fields: [churchId], references: [id], onDelete: Cascade)
-  cell           Cell?          @relation(fields: [cellId], references: [id], onDelete: SetNull)
-  transactions   Transaction[]
+  church            Church             @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  cell              Cell?              @relation(fields: [cellId], references: [id], onDelete: SetNull)
+  transactions      Transaction[]
+  rosterAssignments RosterAssignment[]
 }
 
 model Transaction {
@@ -133,11 +138,15 @@ model Event {
   recurringDay       String?    // DOMINGO, QUARTA, etc.
   isPublic           Boolean    @default(true)
   bannerUrl          String?
-  sentToWhatsapp     Boolean    @default(false)
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  sentToWhatsapp     Boolean             @default(false)
+  maxAttendees       Int?                @default(0) // 0 = sem limite
+  allowRegistration  Boolean             @default(false)
+  registrationFee    Float?              @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
-  church             Church     @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  church             Church              @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  registrations      EventRegistration[]
 }
 
 model PrayerRequest {
@@ -203,4 +212,80 @@ model User {
   group       UserGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   church      Church?    @relation(fields: [churchId], references: [id], onDelete: SetNull)
 }
+
+model Ministry {
+  id          String     @id @default(uuid())
+  churchId    String
+  name        String     // Louvor, Mídia/Som, Kids, Recepção/Diaconato, etc.
+  description String?
+  leaderName  String?
+  leaderPhone String?
+  color       String?    @default("#6366f1")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  church      Church     @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  rosters     Roster[]
+}
+
+model Roster {
+  id          String             @id @default(uuid())
+  churchId    String
+  ministryId  String
+  title       String             // Ex: "Escala Culto de Domingo - Manhã"
+  date        String             // YYYY-MM-DD
+  time        String?            // HH:mm
+  notes       String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  church      Church             @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  ministry    Ministry           @relation(fields: [ministryId], references: [id], onDelete: Cascade)
+  assignments RosterAssignment[]
+}
+
+model RosterAssignment {
+  id           String   @id @default(uuid())
+  rosterId     String
+  memberId     String
+  roleInRoster String   // Ex: "Bateria", "Vocal 1", "Mesa de Som", "Tia Berçário", "Porta Principal"
+  status       String   @default("CONFIRMADO") // CONFIRMADO, PENDENTE, RECUSADO
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  roster       Roster   @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  member       Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model EventRegistration {
+  id        String   @id @default(uuid())
+  eventId   String
+  churchId  String
+  name      String
+  phone     String   // WhatsApp
+  email     String?
+  notes     String?
+  status    String   @default("CONFIRMADA") // CONFIRMADA, PENDENTE, CANCELADA
+  createdAt DateTime @default(now())
+
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  church    Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+}
+
+model Certificate {
+  id            String   @id @default(uuid())
+  churchId      String
+  memberId      String?
+  type          String   // BATISMO, APRESENTACAO_BEBE, MEMBRESIA, CONSAGRACAO_OBREIRO
+  title         String
+  recipientName String
+  date          String   // YYYY-MM-DD
+  pastorName    String
+  verse         String?  // Versículo bíblico no certificado
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  church        Church   @relation(fields: [churchId], references: [id], onDelete: Cascade)
+}
+
 

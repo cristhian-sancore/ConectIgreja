@@ -10,6 +10,8 @@ import { Automation } from './pages/Automation';
 import { Churches } from './pages/Churches';
 import { Prayer } from './pages/Prayer';
 import { UsersPage } from './pages/Users';
+import { Rosters } from './pages/Rosters';
+import { Certificates } from './pages/Certificates';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -148,6 +150,22 @@ export default function App() {
               cells={cells}
               onRefresh={loadAllData}
               onSendWhatsApp={handleSendMemberWhatsApp}
+            />
+          )}
+
+          {currentTab === 'rosters' && (
+            <Rosters
+              churches={churches}
+              allMembers={allMembers.length > 0 ? allMembers : members}
+              currentSelectedChurchId={selectedChurchId}
+            />
+          )}
+
+          {currentTab === 'certificates' && (
+            <Certificates
+              churches={churches}
+              allMembers={allMembers.length > 0 ? allMembers : members}
+              currentSelectedChurchId={selectedChurchId}
             />
           )}
 

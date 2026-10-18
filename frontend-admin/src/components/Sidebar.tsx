@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   XCircle,
   Shield,
+  CalendarCheck,
+  Award,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -31,10 +33,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'members', label: 'Membros & Liderança', icon: Users, badge: todayBirthdaysCount > 0 ? `${todayBirthdaysCount} hoje` : undefined },
+    { id: 'rosters', label: 'Escalas & Ministérios', icon: CalendarCheck, highlight: true },
+    { id: 'certificates', label: 'Certificados & DRE', icon: Award },
     { id: 'finances', label: 'Fluxo de Caixa', icon: DollarSign },
     { id: 'cells', label: 'Células / Grupos', icon: Home },
     { id: 'events', label: 'Agenda & Cultos', icon: Calendar },
-    { id: 'automation', label: 'WhatsApp por Cidade', icon: MessageSquare, highlight: true },
+    { id: 'automation', label: 'WhatsApp & Disparos', icon: MessageSquare, highlight: true },
     { id: 'users', label: 'Usuários & Permissões', icon: Shield },
     { id: 'prayer', label: 'Pedidos de Oração', icon: Heart },
     { id: 'churches', label: 'Igrejas & Filiais', icon: Building2 },

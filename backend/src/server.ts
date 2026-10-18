@@ -10,6 +10,11 @@ import prayerRoutes from './routes/prayer';
 import automationRoutes from './routes/automation';
 import publicRoutes from './routes/public';
 import usersRoutes from './routes/users';
+import rostersRoutes from './routes/rosters';
+import registrationsRoutes from './routes/registrations';
+import certificatesRoutes from './routes/certificates';
+import broadcastRoutes from './routes/broadcast';
+import reportsRoutes from './routes/reports';
 import { SchedulerService } from './services/scheduler';
 
 dotenv.config();
@@ -48,6 +53,11 @@ app.use('/api/prayer-requests', prayerRoutes);
 app.use('/api/automation', automationRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/rosters', rostersRoutes);
+app.use('/api/registrations', registrationsRoutes);
+app.use('/api/certificates', certificatesRoutes);
+app.use('/api/broadcast', broadcastRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // Inicia o servidor e o agendador de tarefas
 app.listen(PORT, () => {
