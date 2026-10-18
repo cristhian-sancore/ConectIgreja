@@ -12,9 +12,11 @@ import publicRoutes from './routes/public';
 import usersRoutes from './routes/users';
 import rostersRoutes from './routes/rosters';
 import registrationsRoutes from './routes/registrations';
+import path from 'path';
 import certificatesRoutes from './routes/certificates';
 import broadcastRoutes from './routes/broadcast';
 import reportsRoutes from './routes/reports';
+import uploadRoutes from './routes/upload';
 import { SchedulerService } from './services/scheduler';
 
 dotenv.config();
@@ -24,7 +26,11 @@ const PORT = process.env.PORT || 4000;
 
 // Middlewares
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+
+// Servir arquivos de uploads estáticos
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Log de requisições simples
 app.use((req, res, next) => {
@@ -58,6 +64,7 @@ app.use('/api/registrations', registrationsRoutes);
 app.use('/api/certificates', certificatesRoutes);
 app.use('/api/broadcast', broadcastRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Inicia o servidor e o agendador de tarefas
 app.listen(PORT, () => {

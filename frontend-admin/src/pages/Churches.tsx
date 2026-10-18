@@ -21,6 +21,7 @@ import {
   Share2,
   Palette,
   Shield,
+  Upload,
 } from 'lucide-react';
 
 interface ChurchesPageProps {
@@ -33,6 +34,7 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingChurch, setEditingChurch] = useState<any>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   // Busca e filtros de membros
   const [memberSearch, setMemberSearch] = useState('');
@@ -67,6 +69,38 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
     welcomeMessage: '',
     memberIds: [] as string[],
   });
+
+  const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Selecione um arquivo de imagem válido (PNG, JPG, SVG, WebP).');
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    const body = new FormData();
+    body.append('logo', file);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setFormData((prev) => ({ ...prev, logoUrl: data.url }));
+      } else {
+        alert(`Erro no upload: ${data.error || 'Não foi possível salvar o arquivo.'}`);
+      }
+    } catch (err: any) {
+      alert(`Erro: ${err.message}`);
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
 
   const handleOpenCreate = () => {
     setEditingChurch(null);
@@ -530,47 +564,103 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
                   </div>
                 </div>
 
-                {/* LOGO OFICIAL COM PREVIEW */}
+                {/* LOGO OFICIAL COM UPLOAD E PREVIEW */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <Image className="w-3.5 h-3.5 text-indigo-400" />
-                      Logo Oficial da Igreja (URL da Imagem PNG / SVG / JPG)
+                      Logo Oficial da Igreja (Upload de Arquivo ou URL)
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono">
-                      Aparece no topo do site e na navbar
+                      Aparece no topo do site e na barra de navegação
                     </span>
                   </label>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-3">
-                    <input
-                      type="url"
-                      placeholder="https://exemplo.com/logo-igreja.png"
-                      value={formData.logoUrl}
-                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                      className="w-full bg-slate-900 text-white px-3.5 py-2.5 rounded-xl border border-slate-700 text-xs font-mono focus:border-amber-500 focus:outline-none"
-                    />
+                  {/* Card de Upload e Preview */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                    {/* Botão de Upload de Arquivo */}
+                    <div className="sm:col-span-2">
+                      <label
+                        className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
+                          isUploadingLogo
+                            ? 'bg-amber-500/10 border-amber-500/50 animate-pulse'
+                            : 'bg-slate-900 border-slate-700 hover:border-amber-500/60 hover:bg-slate-850'
+                        }`}
+                      >
+                        <Upload className="w-6 h-6 text-amber-400 mb-1.5" />
+                        <span className="text-xs font-bold text-white mb-0.5">
+                          {isUploadingLogo ? 'Fazendo Upload da Imagem...' : '📁 Clique para Fazer Upload da Logo Oficial'}
+                        </span>
+                        <span className="text-[10px] text-slate-400 text-center">
+                          Formatos aceitos: PNG transparente, SVG, JPG, WebP (até 10MB)
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+                          disabled={isUploadingLogo}
+                          onChange={handleLogoFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
 
                     {/* Preview da Logo */}
-                    <div className="w-14 h-14 rounded-2xl bg-slate-900 border-2 border-amber-500/40 p-1 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
-                      {formData.logoUrl ? (
-                        <img
-                          src={formData.logoUrl}
-                          alt="Prévia da Logo"
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            (e.target as any).style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <span className="text-[9px] text-slate-500 text-center font-bold">SEM LOGO</span>
+                    <div className="rounded-2xl bg-slate-900 border border-slate-700 p-3 flex flex-col items-center justify-center text-center">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                        Prévia da Logo
+                      </span>
+                      <div className="w-16 h-16 rounded-xl bg-slate-950 border border-amber-500/30 p-1 flex items-center justify-center shadow-inner overflow-hidden">
+                        {formData.logoUrl ? (
+                          <img
+                            src={formData.logoUrl}
+                            alt="Prévia da Logo"
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              (e.target as any).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <span className="text-[9px] text-slate-500 font-bold">SEM LOGO</span>
+                        )}
+                      </div>
+                      {formData.logoUrl && (
+                        <span className="text-[9px] text-emerald-400 font-mono mt-1 truncate max-w-[150px]" title={formData.logoUrl}>
+                          {formData.logoUrl}
+                        </span>
                       )}
                     </div>
+                  </div>
+
+                  {/* Campo de URL Manual / Link Direto */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Ou cole a URL da imagem (https://... ou /uploads/...)"
+                      value={formData.logoUrl}
+                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                      className="w-full bg-slate-900 text-white px-3.5 py-2 rounded-xl border border-slate-700 text-xs font-mono focus:border-amber-500 focus:outline-none"
+                    />
+                    {formData.logoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, logoUrl: '' })}
+                        className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs whitespace-nowrap"
+                      >
+                        ✕ Remover
+                      </button>
+                    )}
                   </div>
 
                   {/* Sugestões de Logos Rápidas para Teste */}
                   <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center gap-2 flex-wrap">
                     <span className="text-[11px] text-slate-400 font-medium">Modelos Prontos:</span>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, logoUrl: '/uploads/logos/conectigreja-official-logo.svg' })}
+                      className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-[10px] text-amber-300 font-bold"
+                    >
+                      👑 Logo Oficial ConectIgreja
+                    </button>
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, logoUrl: 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=300&q=80' })}
@@ -591,13 +681,6 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
                       className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-700 text-[10px] text-amber-300 font-semibold"
                     >
                       📖 Palavra & Luz
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, logoUrl: '' })}
-                      className="px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] text-slate-400"
-                    >
-                      ✕ Limpar Logo
                     </button>
                   </div>
                 </div>
