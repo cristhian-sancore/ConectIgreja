@@ -1,0 +1,173 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Church {
+  id                 String         @id @default(uuid())
+  name               String
+  slug               String         @unique
+  isMain             Boolean        @default(false)
+  pastorName         String?
+  phone              String?
+  email              String?
+  address            String?
+  neighborhood       String?
+  city               String?
+  state              String?
+  pixKey             String?
+  pixType            String?        @default("ALEATORIA")
+  pixRecipient       String?
+  youtubeChannelId   String?
+  youtubeLiveUrl     String?
+  instagramHandle    String?
+  facebookUrl        String?
+  logoUrl            String?
+  welcomeMessage     String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  members            Member[]
+  cells              Cell[]
+  events             Event[]
+  transactions       Transaction[]
+  prayerRequests     PrayerRequest[]
+  automations        AutomationConfig?
+}
+
+model Member {
+  id             String         @id @default(uuid())
+  churchId       String
+  cellId         String?
+  name           String
+  phone          String         // WhatsApp format (ex: 5511999999999)
+  email          String?
+  photoUrl       String?
+  birthDate      String?        // YYYY-MM-DD
+  baptismDate    String?        // YYYY-MM-DD
+  role           String         @default("MEMBRO") // PASTOR, PRESBITERO, DIACONO, LIDER_CELULA, MUSICO, MEMBRO, VISITANTE
+  maritalStatus  String?        @default("SOLTEIRO") // SOLTEIRO, CASADO, VIUVO, DIVORCIADO
+  address        String?
+  status         String         @default("ATIVO") // ATIVO, INATIVO, TRANSFERIDO
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  church         Church         @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  cell           Cell?          @relation(fields: [cellId], references: [id], onDelete: SetNull)
+  transactions   Transaction[]
+}
+
+model Transaction {
+  id             String         @id @default(uuid())
+  churchId       String
+  memberId       String?
+  type           String         // RECEITA ou DESPESA
+  category       String         // DIZIMO, OFERTA, OFERTA_MISSOES, CAMPANHA, ALUGUEL, ENERGIA, AGUA, INTERNET, MANUTENCAO, PRELETORES, OUTROS
+  amount         Float
+  date           String         // YYYY-MM-DD
+  description    String?
+  paymentMethod  String         @default("PIX") // PIX, DINHEIRO, CARTAO, BOLETO, TRANSFERENCIA
+  status         String         @default("CONCLUIDO") // CONCLUIDO, PENDENTE
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  church         Church         @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  member         Member?        @relation(fields: [memberId], references: [id], onDelete: SetNull)
+}
+
+model Cell {
+  id             String         @id @default(uuid())
+  churchId       String
+  name           String
+  leaderName     String
+  leaderPhone    String?
+  hostName       String?
+  weekday        String         // SEGUNDA, TERCA, QUARTA, QUINTA, SEXTA, SABADO, DOMINGO
+  time           String         // HH:mm (ex: 20:00)
+  neighborhood   String
+  address        String
+  latitude       Float?
+  longitude      Float?
+  targetAudience String?        @default("GERAL") // JOVENS, FAMILIAS, HOMENS, MULHERES, CRIANCAS, GERAL
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  church         Church         @relation(fields: [churchId], references: [id], onDelete: Cascade)
+  members        Member[]
+  reports        CellReport[]
+}
+
+model CellReport {
+  id             String         @id @default(uuid())
+  cellId         String
+  meetingDate    String         // YYYY-MM-DD
+  membersCount   Int            @default(0)
+  visitorsCount  Int            @default(0)
+  decisionsCount Int            @default(0)
+  offeringAmount Float          @default(0)
+  notes          String?
+  createdAt      DateTime       @default(now())
+
+  cell           Cell           @relation(fields: [cellId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id                 String     @id @default(uuid())
+  churchId           String
+  title              String
+  description        String?
+  startDate          String     // YYYY-MM-DD ou ISO
+  startTime          String?    // HH:mm
+  endDate            String?
+  endTime            String?
+  location           String?
+  category           String     @default("CULTO") // CULTO, CONFERENCIA, ENSAIO, VIGILIA, BATISMO, JOVENS, CRIANCAS, CASAIS
+  isRecurring        Boolean    @default(false)
+  recurringDay       String?    // DOMINGO, QUARTA, etc.
+  isPublic           Boolean    @default(true)
+  bannerUrl          String?
+  sentToWhatsapp     Boolean    @default(false)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  church             Church     @relation(fields: [churchId], references: [id], onDelete: Cascade)
+}
+
+model PrayerRequest {
+  id             String         @id @default(uuid())
+  churchId       String
+  name           String
+  phone          String?
+  email          String?
+  message        String
+  isConfidential Boolean        @default(false)
+  status         String         @default("PENDENTE") // PENDENTE, EM_ORACAO, ATENDIDO
+  createdAt      DateTime       @default(now())
+
+  church         Church         @relation(fields: [churchId], references: [id], onDelete: Cascade)
+}
+
+model AutomationConfig {
+  id                       String    @id @default(uuid())
+  churchId                 String    @unique
+  evolutionUrl             String    @default("https://api.cristhiansancore.com.br")
+  evolutionApiKey          String    @default("EAC94E310E46-4D87-8AAD-4262C45AF665")
+  instanceName             String    @default("teste")
+  whatsappGroups           String    @default("[]") // JSON list: [{ id: "...", name: "Grupo Geral" }]
+  notifyBirthdays          Boolean   @default(true)
+  notifyBaptisms           Boolean   @default(true)
+  notifySchedules          Boolean   @default(true)
+  birthdayTemplate         String    @default("Graça e Paz, {nome}! 🎉🎈\n\nA família {igreja} louva a Deus pela sua vida e celebra hoje o seu aniversário! Que o Senhor derrame ricas bênçãos sobre você, sua casa e seus passos.\n\n\"O Senhor te abençoe e te guarde; o Senhor faça resplandecer o seu rosto sobre ti.\" (Números 6:24-25)\n\nCom carinho de toda a nossa igreja e liderança! 🙏❤️")
+  baptismTemplate          String    @default("Graça e Paz, {nome}! 🌊✝️\n\nHoje é um dia glorioso! Celebramos o seu Aniversário de Batismo nas águas ({anos} ano(s) de aliança pública com Cristo).\n\n\"Fomos, pois, sepultados com ele na morte pelo batismo; para que, como Cristo ressuscitou dentre os mortos, assim andemos nós também em novidade de vida.\" (Romanos 6:4)\n\nPermaneça firme na caminhada com Jesus! A igreja {igreja} se alegra com você! 🙌✨")
+  scheduleTemplate         String    @default("📢 *PROGRAMAÇÃO DA SEMANA - {igreja}* 🕊️\n\nConfira nossas reuniões e cultos:\n{eventos}\n\n📍 *Endereço:* {endereco}\nEsperamos por você e sua família para adorarmos juntos! 🙏")
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  church                   Church    @relation(fields: [churchId], references: [id], onDelete: Cascade)
+}

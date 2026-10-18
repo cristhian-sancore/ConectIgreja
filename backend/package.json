@@ -1,0 +1,31 @@
+{
+  "name": "conectigreja-backend",
+  "version": "1.0.0",
+  "description": "API e automações do ConectIgreja - Gestão Eclesiástica, Evolution API, YouTube e Finanças",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc && prisma generate",
+    "start": "node dist/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.19.0",
+    "axios": "^1.7.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.5.4",
+    "@types/node-cron": "^3.0.11",
+    "prisma": "^5.19.0",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  }
+}

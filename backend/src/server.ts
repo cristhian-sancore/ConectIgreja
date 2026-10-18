@@ -1,0 +1,62 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import churchesRoutes from './routes/churches';
+import membersRoutes from './routes/members';
+import financesRoutes from './routes/finances';
+import cellsRoutes from './routes/cells';
+import eventsRoutes from './routes/events';
+import prayerRoutes from './routes/prayer';
+import automationRoutes from './routes/automation';
+import publicRoutes from './routes/public';
+import { SchedulerService } from './services/scheduler';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 4000;
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+
+// Log de requisições simples
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
+  next();
+});
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'online',
+    app: 'ConectIgreja API',
+    timestamp: new Date().toISOString(),
+    evolutionApiUrl: process.env.EVOLUTION_API_URL,
+    evolutionInstance: process.env.EVOLUTION_INSTANCE,
+  });
+});
+
+// Registro de Rotas
+app.use('/api/churches', churchesRoutes);
+app.use('/api/members', membersRoutes);
+app.use('/api/finances', financesRoutes);
+app.use('/api/cells', cellsRoutes);
+app.use('/api/events', eventsRoutes);
+app.use('/api/prayer-requests', prayerRoutes);
+app.use('/api/automation', automationRoutes);
+app.use('/api/public', publicRoutes);
+
+// Inicia o servidor e o agendador de tarefas
+app.listen(PORT, () => {
+  console.log(`===================================================`);
+  console.log(`🕊️  ConectIgreja API rodando com sucesso na porta ${PORT}`);
+  console.log(`🔗 URL Base: http://localhost:${PORT}`);
+  console.log(`🔗 Domínio Oficial: ${process.env.PUBLIC_URL || 'https://ConectIgreja.cristhiansancore.com.br'}`);
+  console.log(`===================================================`);
+
+  // Inicializa o agendador cron diário
+  SchedulerService.init();
+});
+
+export default app;

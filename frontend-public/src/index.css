@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+/* Efeito sutil de vidro fosco (glassmorphism) */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-glow {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.15);
+}
+
+/* Animações e gradientes dinâmicos */
+@keyframes pulse-live {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
+}
+
+.animate-live {
+  animation: pulse-live 1.8s infinite ease-in-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

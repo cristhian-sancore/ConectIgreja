@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+.admin-card {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-card-hover {
+  transition: all 0.2s ease-in-out;
+}
+.admin-card-hover:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1);
+}
