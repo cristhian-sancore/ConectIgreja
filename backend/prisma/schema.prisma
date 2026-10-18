@@ -37,6 +37,7 @@ model Church {
   transactions       Transaction[]
   prayerRequests     PrayerRequest[]
   automations        AutomationConfig?
+  users              User[]
 }
 
 model Member {
@@ -159,6 +160,9 @@ model AutomationConfig {
   evolutionUrl             String    @default("https://api.cristhiansancore.com.br")
   evolutionApiKey          String    @default("EAC94E310E46-4D87-8AAD-4262C45AF665")
   instanceName             String    @default("teste")
+  instancePhone            String?   // Número do WhatsApp exclusivo conectado nesta cidade
+  instanceStatus           String?   @default("close")
+  qrcode                   String?
   whatsappGroups           String    @default("[]") // JSON list: [{ id: "...", name: "Grupo Geral" }]
   notifyBirthdays          Boolean   @default(true)
   notifyBaptisms           Boolean   @default(true)
@@ -171,3 +175,32 @@ model AutomationConfig {
 
   church                   Church    @relation(fields: [churchId], references: [id], onDelete: Cascade)
 }
+
+model UserGroup {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  permissions String   @default("[]") // JSON array: ["ALL"], ["MEMBERS"], ["FINANCES"], ["CELLS"], ["EVENTS"], ["AUTOMATION"], etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+}
+
+model User {
+  id          String     @id @default(uuid())
+  groupId     String?
+  churchId    String?    // Se null, acesso ESTADUAL completo a todas as congregações
+  name        String
+  email       String     @unique
+  password    String     @default("123456")
+  phone       String?
+  role        String     @default("PASTOR_CIDADE") // SUPER_ADMIN_ESTADUAL, PASTOR_CIDADE, SECRETARIO, TESOUREIRO, MIDIA
+  status      String     @default("ATIVO") // ATIVO, INATIVO
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  group       UserGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  church      Church?    @relation(fields: [churchId], references: [id], onDelete: SetNull)
+}
+

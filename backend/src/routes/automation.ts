@@ -21,6 +21,60 @@ router.get('/status', async (req, res) => {
   }
 });
 
+// Criar nova instância exclusiva para uma congregação/cidade
+router.post('/instances/create', async (req, res) => {
+  try {
+    const { churchId, instanceName } = req.body;
+    if (!churchId || !instanceName) {
+      return res.status(400).json({ error: 'churchId e instanceName são obrigatórios' });
+    }
+
+    const config = await prisma.automationConfig.findUnique({ where: { churchId } });
+    const customCfg = config ? {
+      url: config.evolutionUrl,
+      apiKey: config.evolutionApiKey,
+    } : undefined;
+
+    const result = await EvolutionService.createInstance(instanceName, customCfg);
+
+    // Salva o nome da instância vinculada a esta igreja
+    await prisma.automationConfig.update({
+      where: { churchId },
+      data: {
+        instanceName,
+        instanceStatus: 'connecting',
+      },
+    });
+
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Obter QR Code ou código para conectar o WhatsApp da congregação
+router.get('/instances/connect/:churchId', async (req, res) => {
+  try {
+    const config = await prisma.automationConfig.findUnique({
+      where: { churchId: req.params.churchId },
+    });
+
+    if (!config) {
+      return res.status(404).json({ error: 'Configuração da igreja não encontrada' });
+    }
+
+    const customCfg = {
+      url: config.evolutionUrl,
+      apiKey: config.evolutionApiKey,
+    };
+
+    const result = await EvolutionService.connectInstance(config.instanceName, customCfg);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Listar grupos do WhatsApp na instância
 router.get('/groups', async (req, res) => {
   try {
@@ -67,6 +121,8 @@ router.put('/config/:churchId', async (req, res) => {
         evolutionUrl: data.evolutionUrl,
         evolutionApiKey: data.evolutionApiKey,
         instanceName: data.instanceName,
+        instancePhone: data.instancePhone,
+        instanceStatus: data.instanceStatus,
         whatsappGroups: typeof data.whatsappGroups === 'string' ? data.whatsappGroups : JSON.stringify(data.whatsappGroups || []),
         notifyBirthdays: data.notifyBirthdays,
         notifyBaptisms: data.notifyBaptisms,
@@ -80,6 +136,8 @@ router.put('/config/:churchId', async (req, res) => {
         evolutionUrl: data.evolutionUrl || 'https://api.cristhiansancore.com.br',
         evolutionApiKey: data.evolutionApiKey || 'EAC94E310E46-4D87-8AAD-4262C45AF665',
         instanceName: data.instanceName || 'teste',
+        instancePhone: data.instancePhone,
+        instanceStatus: data.instanceStatus || 'close',
         whatsappGroups: typeof data.whatsappGroups === 'string' ? data.whatsappGroups : JSON.stringify(data.whatsappGroups || []),
         notifyBirthdays: data.notifyBirthdays ?? true,
         notifyBaptisms: data.notifyBaptisms ?? true,

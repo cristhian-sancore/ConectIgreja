@@ -9,6 +9,7 @@ import eventsRoutes from './routes/events';
 import prayerRoutes from './routes/prayer';
 import automationRoutes from './routes/automation';
 import publicRoutes from './routes/public';
+import usersRoutes from './routes/users';
 import { SchedulerService } from './services/scheduler';
 
 dotenv.config();
@@ -46,6 +47,7 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/prayer-requests', prayerRoutes);
 app.use('/api/automation', automationRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/users', usersRoutes);
 
 // Inicia o servidor e o agendador de tarefas
 app.listen(PORT, () => {

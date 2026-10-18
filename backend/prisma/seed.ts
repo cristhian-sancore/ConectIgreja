@@ -12,6 +12,8 @@ async function main() {
   await prisma.event.deleteMany();
   await prisma.member.deleteMany();
   await prisma.cell.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.userGroup.deleteMany();
   await prisma.automationConfig.deleteMany();
   await prisma.church.deleteMany();
 
@@ -62,22 +64,110 @@ async function main() {
     },
   });
 
-  // 3. Configurações da Evolution API para a Sede
+  // 3. Configurações da Evolution API para a Sede (WhatsApp de São Paulo)
   await prisma.automationConfig.create({
     data: {
       churchId: sede.id,
       evolutionUrl: 'https://api.cristhiansancore.com.br',
       evolutionApiKey: 'EAC94E310E46-4D87-8AAD-4262C45AF665',
       instanceName: 'teste',
+      instancePhone: '5511988887777',
+      instanceStatus: 'open',
       whatsappGroups: JSON.stringify([
-        { id: '120363025287413665@g.us', name: '📢 Comunidade Geral da Igreja' },
-        { id: '120363025287413999@g.us', name: '🔥 ConectJovem - Jovens e Adolescentes' },
-        { id: '120363025287413888@g.us', name: '🕊️ Ministério de Mulheres Virtuosas' },
+        { id: '120363025287413665@g.us', name: '📢 Comunidade Geral SP' },
+        { id: '120363025287413999@g.us', name: '🔥 ConectJovem SP' },
       ]),
       notifyBirthdays: true,
       notifyBaptisms: true,
       notifySchedules: true,
     },
+  });
+
+  // 3.1. Configurações da Evolution API para a Filial (WhatsApp Exclusivo de Campinas)
+  await prisma.automationConfig.create({
+    data: {
+      churchId: filial.id,
+      evolutionUrl: 'https://api.cristhiansancore.com.br',
+      evolutionApiKey: 'EAC94E310E46-4D87-8AAD-4262C45AF665',
+      instanceName: 'campinas-filial',
+      instancePhone: '5519977776666',
+      instanceStatus: 'close',
+      whatsappGroups: JSON.stringify([
+        { id: '120363025287413111@g.us', name: '📢 Comunidade Campinas' },
+      ]),
+      notifyBirthdays: true,
+      notifyBaptisms: true,
+      notifySchedules: true,
+    },
+  });
+
+  // 3.2. Grupos de Usuários & Níveis de Acesso
+  const grupoEstadual = await prisma.userGroup.create({
+    data: {
+      name: 'Administrador Estadual / Bispo',
+      description: 'Acesso total irrestrito a todas as congregações do estado, relatórios consolidados e instâncias da Evolution API.',
+      permissions: JSON.stringify(['ALL']),
+    },
+  });
+
+  const grupoPastorCidade = await prisma.userGroup.create({
+    data: {
+      name: 'Pastor Titular da Cidade / Filial',
+      description: 'Gestão da igreja local de sua cidade, finanças, membros, células e WhatsApp exclusivo local.',
+      permissions: JSON.stringify(['MANAGE_LOCAL_CHURCH', 'MEMBERS', 'FINANCES', 'CELLS', 'EVENTS', 'LOCAL_WHATSAPP']),
+    },
+  });
+
+  const grupoSecretaria = await prisma.userGroup.create({
+    data: {
+      name: 'Secretaria Eclesiástica',
+      description: 'Cadastro de membros, certidões de batismo, controle de aniversariantes e pedidos de oração.',
+      permissions: JSON.stringify(['MEMBERS', 'CELLS', 'PRAYER_REQUESTS']),
+    },
+  });
+
+  const grupoTesouraria = await prisma.userGroup.create({
+    data: {
+      name: 'Tesouraria & Finanças',
+      description: 'Lançamentos de dízimos, ofertas, despesas e emissão de balanços mensais.',
+      permissions: JSON.stringify(['FINANCES']),
+    },
+  });
+
+  // 3.3. Usuários Iniciais
+  await prisma.user.createMany({
+    data: [
+      {
+        groupId: grupoEstadual.id,
+        churchId: null, // Acesso Estadual a todas as igrejas!
+        name: 'Pastor Samuel Oliveira (Estadual)',
+        email: 'pastor.estadual@conectigreja.cristhiansancore.com.br',
+        password: 'admin',
+        phone: '5511988887777',
+        role: 'SUPER_ADMIN_ESTADUAL',
+        status: 'ATIVO',
+      },
+      {
+        groupId: grupoPastorCidade.id,
+        churchId: filial.id, // Acesso exclusivo à filial de Campinas!
+        name: 'Pastor Marcos Vinicius (Campinas)',
+        email: 'marcos.campinas@conectigreja.cristhiansancore.com.br',
+        password: 'admin',
+        phone: '5519977776666',
+        role: 'PASTOR_CIDADE',
+        status: 'ATIVO',
+      },
+      {
+        groupId: grupoSecretaria.id,
+        churchId: sede.id, // Secretaria da Sede SP
+        name: 'Ana Beatriz Souza',
+        email: 'secretaria.sp@conectigreja.cristhiansancore.com.br',
+        password: 'admin',
+        phone: '5511999994444',
+        role: 'SECRETARIO',
+        status: 'ATIVO',
+      },
+    ],
   });
 
   // 4. Células / Grupos Pequenos

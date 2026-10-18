@@ -9,6 +9,7 @@ import { Events } from './pages/Events';
 import { Automation } from './pages/Automation';
 import { Churches } from './pages/Churches';
 import { Prayer } from './pages/Prayer';
+import { UsersPage } from './pages/Users';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -162,7 +163,15 @@ export default function App() {
 
           {currentTab === 'automation' && (
             <Automation
-              churchId={selectedChurchId || churches[0]?.id}
+              churches={churches}
+              currentSelectedChurchId={selectedChurchId}
+              onSelectChurch={setSelectedChurchId}
+            />
+          )}
+
+          {currentTab === 'users' && (
+            <UsersPage
+              churches={churches}
             />
           )}
 

@@ -12,6 +12,7 @@ import {
   Flame,
   CheckCircle2,
   XCircle,
+  Shield,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -33,7 +34,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'finances', label: 'Fluxo de Caixa', icon: DollarSign },
     { id: 'cells', label: 'Células / Grupos', icon: Home },
     { id: 'events', label: 'Agenda & Cultos', icon: Calendar },
-    { id: 'automation', label: 'Evolution API (WhatsApp)', icon: MessageSquare, highlight: true },
+    { id: 'automation', label: 'WhatsApp por Cidade', icon: MessageSquare, highlight: true },
+    { id: 'users', label: 'Usuários & Permissões', icon: Shield },
     { id: 'prayer', label: 'Pedidos de Oração', icon: Heart },
     { id: 'churches', label: 'Igrejas & Filiais', icon: Building2 },
   ];

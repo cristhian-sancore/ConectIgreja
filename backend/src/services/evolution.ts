@@ -39,6 +39,54 @@ export class EvolutionService {
   }
 
   /**
+   * Cria uma nova instância na Evolution API para uma cidade/igreja específica
+   */
+  static async createInstance(instanceName: string, customConfig?: { url?: string; apiKey?: string }) {
+    const { url, apiKey } = this.getApiConfig(customConfig);
+    try {
+      const response = await axios.post(
+        `${url}/instance/create`,
+        {
+          instanceName,
+          qrcode: true,
+          integration: 'WHATSAPP-BAILEYS',
+        },
+        {
+          headers: { apikey: apiKey, 'Content-Type': 'application/json' },
+          timeout: 15000,
+        }
+      );
+      return { success: true, data: response.data };
+    } catch (error: any) {
+      console.error('[EvolutionAPI] Erro ao criar instância:', error?.response?.data || error.message);
+      return {
+        success: false,
+        error: error?.response?.data || error.message,
+      };
+    }
+  }
+
+  /**
+   * Obtém QR Code ou código de pareamento para conectar o WhatsApp
+   */
+  static async connectInstance(instanceName: string, customConfig?: { url?: string; apiKey?: string }) {
+    const { url, apiKey } = this.getApiConfig(customConfig);
+    try {
+      const response = await axios.get(`${url}/instance/connect/${instanceName}`, {
+        headers: { apikey: apiKey },
+        timeout: 10000,
+      });
+      return { success: true, data: response.data };
+    } catch (error: any) {
+      console.error('[EvolutionAPI] Erro ao conectar instância:', error?.response?.data || error.message);
+      return {
+        success: false,
+        error: error?.response?.data || error.message,
+      };
+    }
+  }
+
+  /**
    * Busca todos os grupos do WhatsApp disponíveis na instância
    */
   static async fetchGroups(customConfig?: { url?: string; apiKey?: string; instance?: string }) {
