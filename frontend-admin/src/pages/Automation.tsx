@@ -62,7 +62,7 @@ export const Automation: React.FC<AutomationPageProps> = ({
   });
 
   const [connectionStatus, setConnectionStatus] = useState<string>('verificando...');
-  const [testNumber, setTestNumber] = useState('');
+  const [testNumber, setTestNumber] = useState('5565996772226');
   const [testMessage, setTestMessage] = useState('Graça e Paz! Mensagem de teste enviada pela Evolution API da nossa igreja.');
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -466,12 +466,19 @@ export const Automation: React.FC<AutomationPageProps> = ({
           A mensagem será enviada a partir da instância exclusiva desta cidade ({config.instanceName}).
         </p>
 
+        <div className="flex items-center gap-2 p-2.5 mb-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+          <Shield className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>
+            <strong>Proteção Antibloqueio Ativa:</strong> Todos os testes devem ser realizados no número seguro do administrador (<strong>5565996772226</strong>) para evitar denúncias de SPAM ou banimento do chip.
+          </span>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1">WhatsApp de Destino</label>
             <input
               type="text"
-              placeholder="5511999999999"
+              placeholder="5565996772226"
               value={testNumber}
               onChange={(e) => setTestNumber(e.target.value)}
               className="w-full bg-slate-950 text-white px-3.5 py-2 rounded-xl border border-slate-800 text-xs font-mono"

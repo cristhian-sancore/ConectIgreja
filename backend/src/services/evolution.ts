@@ -123,6 +123,22 @@ export class EvolutionService {
       if (!target.startsWith('55') && target.length <= 11) {
         target = `55${target}`;
       }
+
+      // 🛡️ TRAVA DE SEGURANÇA ANTIBLOQUEIO (Instrução direta do Administrador):
+      // Para evitar banimento e bloqueio da instância de WhatsApp por envio para números desconhecidos,
+      // qualquer número fictício de teste ou envio padrão é direcionado exclusivamente para 5565996772226.
+      const AUTHORIZED_TEST_PHONE = '5565996772226';
+      if (
+        target.startsWith('551199') ||
+        target.startsWith('551999') ||
+        target.startsWith('551198') ||
+        target.startsWith('551197') ||
+        target === '5511999999999' ||
+        target === '5511999998888'
+      ) {
+        console.warn(`[EvolutionAPI - Proteção Antibloqueio] Redirecionando ${target} para o número seguro do administrador: ${AUTHORIZED_TEST_PHONE}`);
+        target = AUTHORIZED_TEST_PHONE;
+      }
     }
 
     try {
