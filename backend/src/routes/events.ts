@@ -18,7 +18,8 @@ router.get('/', async (req, res) => {
       where,
       orderBy: { startDate: 'asc' },
       include: {
-        church: { select: { name: true, address: true } },
+        church: { select: { id: true, name: true, slug: true, address: true, pixKey: true, pixType: true, pixRecipient: true } },
+        _count: { select: { registrations: true } },
       },
     });
 
@@ -36,17 +37,24 @@ router.post('/', async (req, res) => {
       data: {
         churchId: data.churchId,
         title: data.title,
-        description: data.description,
+        description: data.description || '',
         startDate: data.startDate,
         startTime: data.startTime || '19:30',
-        endDate: data.endDate,
-        endTime: data.endTime,
-        location: data.location,
+        endDate: data.endDate || null,
+        endTime: data.endTime || null,
+        location: data.location || '',
         category: data.category || 'CULTO',
         isRecurring: data.isRecurring || false,
-        recurringDay: data.recurringDay,
+        recurringDay: data.recurringDay || null,
         isPublic: data.isPublic !== undefined ? data.isPublic : true,
-        bannerUrl: data.bannerUrl,
+        bannerUrl: data.bannerUrl || null,
+        allowRegistration: data.allowRegistration !== undefined ? Boolean(data.allowRegistration) : false,
+        maxAttendees: data.maxAttendees !== undefined && data.maxAttendees !== '' ? Number(data.maxAttendees) : 0,
+        registrationFee: data.registrationFee !== undefined && data.registrationFee !== '' ? Number(data.registrationFee) : 0,
+      },
+      include: {
+        church: { select: { id: true, name: true, slug: true, address: true } },
+        _count: { select: { registrations: true } },
       },
     });
     res.status(201).json(event);
@@ -58,9 +66,31 @@ router.post('/', async (req, res) => {
 // Atualizar evento
 router.put('/:id', async (req, res) => {
   try {
+    const data = req.body;
+    const updateData: any = { ...data };
+    if (updateData.maxAttendees !== undefined && updateData.maxAttendees !== '') {
+      updateData.maxAttendees = Number(updateData.maxAttendees);
+    }
+    if (updateData.registrationFee !== undefined && updateData.registrationFee !== '') {
+      updateData.registrationFee = Number(updateData.registrationFee);
+    }
+    if (updateData.allowRegistration !== undefined) {
+      updateData.allowRegistration = Boolean(updateData.allowRegistration);
+    }
+    // Removemos propriedades aninhadas não persistíveis
+    delete updateData.church;
+    delete updateData._count;
+    delete updateData.id;
+    delete updateData.createdAt;
+    delete updateData.updatedAt;
+
     const updated = await prisma.event.update({
       where: { id: req.params.id },
-      data: req.body,
+      data: updateData,
+      include: {
+        church: { select: { id: true, name: true, slug: true, address: true } },
+        _count: { select: { registrations: true } },
+      },
     });
     res.json(updated);
   } catch (err: any) {
@@ -105,7 +135,14 @@ router.post('/:id/broadcast-whatsapp', async (req, res) => {
       return res.status(400).json({ error: 'Nenhum grupo de WhatsApp configurado nas opções da igreja' });
     }
 
-    const mensagem = `📢 *AVISO IMPORTANTE - ${event.church.name}* 🕊️\n\n🗓️ *${event.title}*\n⏰ ${event.startDate}${event.startTime ? ` às ${event.startTime}` : ''}\n📍 ${event.location || event.church.address || 'Templo Sede'}\n\n${event.description || ''}\n\nEsperamos por você e sua família! Compartilhe e convide um amigo! 🙏✨`;
+    let infoInscricao = '';
+    if (event.allowRegistration) {
+      const vagas = event.maxAttendees && event.maxAttendees > 0 ? `🎟️ *Vagas:* Limitadas a ${event.maxAttendees} pessoas\n` : '';
+      const custo = event.registrationFee && event.registrationFee > 0 ? `💰 *Investimento/Inscrição:* R$ ${Number(event.registrationFee).toFixed(2)}\n` : '🎟️ *Entrada:* Franca / Inscrição Gratuita\n';
+      infoInscricao = `\n${vagas}${custo}👉 *Garanta sua vaga online:* https://conectigreja.cristhiansancore.com.br/?igreja=${event.church.slug || ''}#programacao\n`;
+    }
+
+    const mensagem = `📢 *AVISO IMPORTANTE - ${event.church.name}* 🕊️\n\n🗓️ *${event.title}*\n⏰ ${event.startDate}${event.startTime ? ` às ${event.startTime}` : ''}\n📍 ${event.location || event.church.address || 'Templo Sede'}\n\n${event.description || ''}\n${infoInscricao}\nEsperamos por você e sua família! Compartilhe e convide um amigo! 🙏✨`;
 
     const customCfg = {
       url: config.evolutionUrl,

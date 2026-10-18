@@ -4,7 +4,7 @@ import { YouTubeService } from '../services/youtube';
 
 const router = Router();
 
-// Informações da Igreja Principal (ou por slug)
+// Informações da Igreja Principal (ou por query ?slug=...)
 router.get('/church', async (req, res) => {
   try {
     const { slug } = req.query;
@@ -30,6 +30,22 @@ router.get('/church', async (req, res) => {
       return res.status(404).json({ error: 'Nenhuma congregação cadastrada.' });
     }
 
+    res.json(church);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Informações da Igreja por parâmetro direto na URL (/api/public/church/:slug)
+router.get('/church/:slug', async (req, res) => {
+  try {
+    const slug = req.params.slug;
+    const church = await prisma.church.findUnique({
+      where: { slug },
+    });
+    if (!church) {
+      return res.status(404).json({ error: `Congregação com slug '${slug}' não encontrada.` });
+    }
     res.json(church);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

@@ -80,8 +80,8 @@ router.get('/summary', async (req, res) => {
   }
 });
 
-// Listar lançamentos
-router.get('/transactions', async (req, res) => {
+// Listar lançamentos (suporta / e /transactions)
+const listTransactionsHandler = async (req: any, res: any) => {
   try {
     const { churchId, type, category, startDate, endDate } = req.query;
 
@@ -107,10 +107,13 @@ router.get('/transactions', async (req, res) => {
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
-});
+};
+
+router.get('/', listTransactionsHandler);
+router.get('/transactions', listTransactionsHandler);
 
 // Criar lançamento (Dízimo, Oferta ou Despesa)
-router.post('/transactions', async (req, res) => {
+const createTransactionHandler = async (req: any, res: any) => {
   try {
     const data = req.body;
     const transaction = await prisma.transaction.create({
@@ -131,10 +134,13 @@ router.post('/transactions', async (req, res) => {
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
-});
+};
 
-// Excluir lançamento
-router.delete('/transactions/:id', async (req, res) => {
+router.post('/', createTransactionHandler);
+router.post('/transactions', createTransactionHandler);
+
+// Excluir lançamento (suporta /:id e /transactions/:id)
+const deleteTransactionHandler = async (req: any, res: any) => {
   try {
     await prisma.transaction.delete({
       where: { id: req.params.id },
@@ -143,6 +149,9 @@ router.delete('/transactions/:id', async (req, res) => {
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
-});
+};
+
+router.delete('/:id', deleteTransactionHandler);
+router.delete('/transactions/:id', deleteTransactionHandler);
 
 export default router;

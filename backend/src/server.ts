@@ -66,6 +66,16 @@ app.use('/api/broadcast', broadcastRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// Aliases REST de conveniência
+app.use('/api/user-groups', (req, res, next) => {
+  req.url = '/groups' + (req.url === '/' ? '' : req.url);
+  usersRoutes(req, res, next);
+});
+app.use('/api/ministries', (req, res, next) => {
+  req.url = '/ministries' + (req.url === '/' ? '' : req.url);
+  rostersRoutes(req, res, next);
+});
+
 // Inicia o servidor e o agendador de tarefas
 app.listen(PORT, () => {
   console.log(`===================================================`);

@@ -5,22 +5,27 @@ import fs from 'fs';
 
 const router = Router();
 
-// Garante que o diretório de uploads exista
-const uploadDir = path.join(__dirname, '../../uploads/logos');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Garante que os diretórios de uploads existam
+const logosDir = path.join(__dirname, '../../uploads/logos');
+const bannersDir = path.join(__dirname, '../../uploads/banners');
+if (!fs.existsSync(logosDir)) fs.mkdirSync(logosDir, { recursive: true });
+if (!fs.existsSync(bannersDir)) fs.mkdirSync(bannersDir, { recursive: true });
 
 // Configuração do Multer para armazenamento em disco
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    if (file.fieldname === 'banner' || req.query.type === 'banner') {
+      cb(null, bannersDir);
+    } else {
+      cb(null, logosDir);
+    }
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     const cleanName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '');
+    const prefix = file.fieldname === 'banner' || req.query.type === 'banner' ? 'banner' : 'logo';
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-    cb(null, `logo-${cleanName}-${uniqueSuffix}${ext}`);
+    cb(null, `${prefix}-${cleanName}-${uniqueSuffix}${ext}`);
   },
 });
 
@@ -37,19 +42,22 @@ const upload = multer({
   },
 });
 
-// Endpoint de Upload via Multipart Form-Data
-router.post('/', upload.single('logo'), (req, res) => {
+// Endpoint de Upload via Multipart Form-Data (aceita logo, banner, etc.)
+router.post('/', upload.any(), (req, res) => {
   try {
-    if (!req.file) {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
       return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
     }
 
-    const publicUrl = `/uploads/logos/${req.file.filename}`;
+    const file = files[0];
+    const subfolder = file.fieldname === 'banner' || req.query.type === 'banner' ? 'banners' : 'logos';
+    const publicUrl = `/uploads/${subfolder}/${file.filename}`;
     res.json({
       success: true,
       url: publicUrl,
-      filename: req.file.filename,
-      size: req.file.size,
+      filename: file.filename,
+      size: file.size,
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -72,7 +80,7 @@ router.post('/base64', async (req, res) => {
     const ext = matches[1].split('/')[1] === 'svg+xml' ? 'svg' : matches[1].split('/')[1] || 'png';
     const buffer = Buffer.from(matches[2], 'base64');
     const uniqueName = `logo-${Date.now()}-${Math.round(Math.random() * 1e6)}.${ext}`;
-    const filePath = path.join(uploadDir, uniqueName);
+    const filePath = path.join(logosDir, uniqueName);
 
     fs.writeFileSync(filePath, buffer);
 

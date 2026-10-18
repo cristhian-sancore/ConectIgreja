@@ -109,8 +109,8 @@ router.delete('/:id', async (req, res) => {
 // GRUPOS DE USUÁRIOS & PERMISSÕES
 // ==========================================
 
-// Listar todos os grupos de usuários
-router.get('/groups/list', async (req, res) => {
+// Listar todos os grupos de usuários (suporta /groups e /groups/list)
+const listGroupsHandler = async (req: any, res: any) => {
   try {
     const groups = await prisma.userGroup.findMany({
       orderBy: { name: 'asc' },
@@ -122,7 +122,10 @@ router.get('/groups/list', async (req, res) => {
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
-});
+};
+
+router.get('/groups', listGroupsHandler);
+router.get('/groups/list', listGroupsHandler);
 
 // Criar novo grupo de usuário
 router.post('/groups', async (req, res) => {

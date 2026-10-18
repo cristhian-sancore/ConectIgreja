@@ -76,7 +76,16 @@ router.post('/', async (req, res) => {
       const churchName = event.church?.name || 'Igreja Conectada';
       const churchAddr = event.location || event.church?.address || 'Templo da Igreja';
       const formattedDate = event.startDate ? event.startDate.split('-').reverse().join('/') : 'Data confirmada';
-      const confirmMsg = `Graça e Paz, ${name}! 🎉✨\n\nSua inscrição para o evento *${event.title}* na igreja *${churchName}* foi confirmada com sucesso!\n\n📅 *Data:* ${formattedDate} ${event.startTime ? `às ${event.startTime}` : ''}\n📍 *Local:* ${churchAddr}\n\nEstamos ansiosos para receber você e sua família. Qualquer dúvida, responda a esta mensagem. Deus te abençoe! 🙏🕊️`;
+
+      let feeMsg = '';
+      if (event.registrationFee && event.registrationFee > 0) {
+        feeMsg = `\n💰 *Taxa de Inscrição:* R$ ${Number(event.registrationFee).toFixed(2)}`;
+        if (event.church?.pixKey) {
+          feeMsg += `\n🔑 *Chave Pix para Pagamento:* ${event.church.pixKey} (${event.church.pixType || 'Chave'})\n👤 *Favorecido:* ${event.church.pixRecipient || event.church.name}\nEnvie o comprovante nesta conversa para liberação do seu crachá/vaga.`;
+        }
+      }
+
+      const confirmMsg = `Graça e Paz, ${name}! 🎉✨\n\nSua inscrição para o evento *${event.title}* na igreja *${churchName}* foi confirmada com sucesso!\n\n📅 *Data:* ${formattedDate} ${event.startTime ? `às ${event.startTime}` : ''}\n📍 *Local:* ${churchAddr}${feeMsg}\n\nEstamos ansiosos para receber você e sua família. Qualquer dúvida, responda a esta mensagem. Deus te abençoe! 🙏🕊️`;
 
       await EvolutionService.sendTextMessage({
         number: phone,
@@ -93,6 +102,10 @@ router.post('/', async (req, res) => {
       phone: registration.phone,
       email: registration.email,
       status: registration.status,
+      registrationFee: event.registrationFee || 0,
+      pixKey: event.church?.pixKey,
+      pixType: event.church?.pixType,
+      pixRecipient: event.church?.pixRecipient,
       registration,
       message: 'Inscrição realizada com sucesso!',
     });

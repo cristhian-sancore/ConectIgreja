@@ -100,7 +100,41 @@ router.get('/groups', async (req, res) => {
   }
 });
 
-// Buscar configurações de automação da congregação
+// Buscar configurações de automação (geral ou por query ?churchId)
+router.get('/config', async (req, res) => {
+  try {
+    const { churchId } = req.query;
+    let targetChurchId = churchId ? String(churchId) : null;
+
+    if (!targetChurchId) {
+      const mainChurch = await prisma.church.findFirst({ where: { isMain: true } }) || await prisma.church.findFirst();
+      if (!mainChurch) {
+        return res.json({
+          evolutionUrl: 'https://api.cristhiansancore.com.br',
+          evolutionApiKey: 'EAC94E310E46-4D87-8AAD-4262C45AF665',
+          instanceName: 'teste',
+        });
+      }
+      targetChurchId = mainChurch.id;
+    }
+
+    let config = await prisma.automationConfig.findUnique({
+      where: { churchId: targetChurchId },
+    });
+
+    if (!config) {
+      config = await prisma.automationConfig.create({
+        data: { churchId: targetChurchId },
+      });
+    }
+
+    res.json(config);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Buscar configurações de automação da congregação por parâmetro :churchId
 router.get('/config/:churchId', async (req, res) => {
   try {
     let config = await prisma.automationConfig.findUnique({
