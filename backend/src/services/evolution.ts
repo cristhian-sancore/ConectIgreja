@@ -243,4 +243,16 @@ export class EvolutionService {
 
     return { success: true, count: results.length, details: results };
   }
+
+  /**
+   * Busca todas as congregações com configuração de automação
+   */
+  static async fetchChurchesWithAutomation() {
+    return await prisma.church.findMany({
+      include: {
+        automations: true,
+      },
+    });
+  }
 }
+
