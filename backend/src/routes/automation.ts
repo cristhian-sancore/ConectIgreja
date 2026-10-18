@@ -21,9 +21,17 @@ router.get('/status', async (req, res) => {
   }
 });
 
-// Criar nova instância exclusiva para uma congregação/cidade
+// Criar nova instância exclusiva para uma congregação/cidade (Exclusivo Super Admin)
 router.post('/instances/create', async (req, res) => {
   try {
+    const userRole = req.headers['x-user-role'] || req.body.userRole || req.body.role;
+    // Se o perfil do usuário for informado e não for Super Admin, bloqueia
+    if (userRole && userRole !== 'SUPER_ADMIN_ESTADUAL' && userRole !== 'SUPER_ADMIN') {
+      return res.status(403).json({
+        error: 'Acesso negado: Apenas o Super Admin tem autorização para cadastrar e gerenciar instâncias da Evolution API em todas as igrejas.',
+      });
+    }
+
     const { churchId, instanceName } = req.body;
     if (!churchId || !instanceName) {
       return res.status(400).json({ error: 'churchId e instanceName são obrigatórios' });
@@ -114,7 +122,19 @@ router.get('/config/:churchId', async (req, res) => {
 // Atualizar configurações da Evolution API para a congregação
 router.put('/config/:churchId', async (req, res) => {
   try {
+    const userRole = req.headers['x-user-role'] || req.body.userRole || req.body.role;
     const data = req.body;
+
+    // Se o usuário não for Super Admin e tentar mudar a instância ou chaves globais da Evolution
+    if (userRole && userRole !== 'SUPER_ADMIN_ESTADUAL' && userRole !== 'SUPER_ADMIN') {
+      const existing = await prisma.automationConfig.findUnique({ where: { churchId: req.params.churchId } });
+      if (existing && (data.instanceName !== existing.instanceName || (data.evolutionApiKey && data.evolutionApiKey !== existing.evolutionApiKey))) {
+        return res.status(403).json({
+          error: 'Acesso negado: Somente o Super Admin pode alterar a instância e credenciais da Evolution API.',
+        });
+      }
+    }
+
     const config = await prisma.automationConfig.upsert({
       where: { churchId: req.params.churchId },
       update: {

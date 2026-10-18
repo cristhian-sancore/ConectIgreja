@@ -19,13 +19,26 @@ interface AutomationPageProps {
   churches: any[];
   currentSelectedChurchId?: string;
   onSelectChurch?: (id: string) => void;
+  currentUser?: {
+    name: string;
+    role: string;
+    title: string;
+    email?: string;
+  };
 }
 
 export const Automation: React.FC<AutomationPageProps> = ({
   churches = [],
   currentSelectedChurchId,
   onSelectChurch,
+  currentUser = {
+    name: 'Cristhian Sancore',
+    role: 'SUPER_ADMIN_ESTADUAL',
+    title: 'Super Administrador Estadual',
+  },
 }) => {
+  const isSuperAdmin = currentUser.role === 'SUPER_ADMIN_ESTADUAL' || currentUser.role === 'SUPER_ADMIN';
+
   // Igreja/Cidade ativa para configuração da Evolution
   const [activeChurchId, setActiveChurchId] = useState<string>(
     currentSelectedChurchId || churches[0]?.id || ''
@@ -115,12 +128,18 @@ export const Automation: React.FC<AutomationPageProps> = ({
     try {
       const res = await fetch(`/api/automation/config/${activeChurchId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': currentUser.role,
+        },
+        body: JSON.stringify({ ...config, userRole: currentUser.role }),
       });
       if (res.ok) {
         setSavedSuccess(true);
         setTimeout(() => setSavedSuccess(false), 4000);
+      } else {
+        const data = await res.json();
+        alert(`Aviso: ${data.error || 'Erro ao salvar configurações'}`);
       }
     } finally {
       setSaving(false);
@@ -135,10 +154,14 @@ export const Automation: React.FC<AutomationPageProps> = ({
     try {
       const res = await fetch('/api/automation/instances/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': currentUser.role,
+        },
         body: JSON.stringify({
           churchId: activeChurchId,
           instanceName: newInstanceName.toLowerCase().replace(/[^a-z0-9_-]/g, '-'),
+          userRole: currentUser.role,
         }),
       });
       const data = await res.json();
@@ -225,6 +248,60 @@ export const Automation: React.FC<AutomationPageProps> = ({
 
   return (
     <div className="space-y-6 animate-fadeIn max-w-5xl">
+      {/* Banner de Controle de Permissão - Super Admin */}
+      {isSuperAdmin ? (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-slate-900 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-2xl border border-amber-500/40 shadow-inner shrink-0">
+              👑
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-amber-400">
+                  Acesso Exclusivo de Super Admin Ativo
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  {currentUser.name}
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5 max-w-2xl">
+                Apenas você possui autorização total para cadastrar, configurar e conectar as instâncias da Evolution API em todas as igrejas e cidades do estado.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              setNewInstanceName(`igreja-${selectedChurch?.city ? selectedChurch.city.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'filial'}`);
+              setIsCreateModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 transition-all hover:scale-105 self-start sm:self-auto shrink-0"
+          >
+            <Plus className="w-4 h-4 text-slate-950 stroke-[3]" />
+            Cadastrar Nova Instância
+          </button>
+        </div>
+      ) : (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-3.5 shadow-xl">
+          <div className="w-11 h-11 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-2xl border border-rose-500/40 shrink-0">
+            🔒
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-rose-400">
+                Acesso Restrito: Cadastro de Instâncias Bloqueado
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300">
+                {currentUser.title}
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5">
+              O cadastro de novas instâncias da Evolution API é exclusivo do <strong>Super Admin</strong>. Como pastor local, você pode apenas visualizar e sincronizar o WhatsApp da sua filial.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Topo com Seletor da Cidade / Congregação */}
       <div className="p-5 rounded-2xl admin-card border border-indigo-500/30 bg-indigo-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -295,16 +372,26 @@ export const Automation: React.FC<AutomationPageProps> = ({
 
         {/* Ações de Instância */}
         <div className="flex flex-wrap items-center gap-2.5 self-end md:self-auto">
-          <button
-            onClick={() => {
-              setNewInstanceName(`igreja-${selectedChurch?.city ? selectedChurch.city.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'filial'}`);
-              setIsCreateModalOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all"
-          >
-            <Plus className="w-3.5 h-3.5 text-indigo-400" />
-            Nova Instância
-          </button>
+          {isSuperAdmin ? (
+            <button
+              onClick={() => {
+                setNewInstanceName(`igreja-${selectedChurch?.city ? selectedChurch.city.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'filial'}`);
+                setIsCreateModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all hover:scale-102"
+            >
+              <Plus className="w-3.5 h-3.5 text-indigo-400" />
+              Nova Instância
+            </button>
+          ) : (
+            <div
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 text-slate-500 text-xs font-semibold border border-slate-800 cursor-not-allowed select-none"
+              title="Apenas o Super Admin tem permissão para cadastrar novas instâncias"
+            >
+              <Shield className="w-3.5 h-3.5 text-slate-600" />
+              <span>Instância Exclusiva Super Admin</span>
+            </div>
+          )}
 
           <button
             onClick={handleConnectQr}
@@ -410,12 +497,18 @@ export const Automation: React.FC<AutomationPageProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">URL da Evolution API</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center justify-between">
+                <span>URL da Evolution API</span>
+                {!isSuperAdmin && <span className="text-[10px] text-amber-400 font-bold">🔒 Super Admin</span>}
+              </label>
               <input
                 type="text"
+                disabled={!isSuperAdmin}
                 value={config.evolutionUrl}
                 onChange={(e) => setConfig({ ...config, evolutionUrl: e.target.value })}
-                className="w-full bg-slate-950 text-white px-3.5 py-2 rounded-xl border border-slate-800 text-xs font-mono"
+                className={`w-full bg-slate-950 text-white px-3.5 py-2 rounded-xl border border-slate-800 text-xs font-mono ${
+                  !isSuperAdmin ? 'opacity-60 cursor-not-allowed bg-slate-900/50' : ''
+                }`}
               />
             </div>
           </div>

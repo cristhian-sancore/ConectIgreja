@@ -17,53 +17,58 @@ export default function App() {
   const [cells, setCells] = useState<any[]>([]);
   const [media, setMedia] = useState<any>({ live: { isLive: false }, videos: [], socialGallery: [] });
   const [loading, setLoading] = useState(true);
+  const [isIndependentUrl, setIsIndependentUrl] = useState(false);
 
-  // Carrega a lista de congregações
+  // Carrega a igreja baseada na URL independente (?igreja=slug ou /igreja/slug)
   useEffect(() => {
-    async function loadChurches() {
+    async function initChurch() {
+      // 1. Detecta slug na URL (ex: ?igreja=filial-esperanca ou /igreja/filial-esperanca ou /filial-esperanca)
+      const searchParams = new URLSearchParams(window.location.search);
+      const querySlug = searchParams.get('igreja') || searchParams.get('slug');
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const pathSlug = pathSegments[0] === 'igreja' ? pathSegments[1] : (pathSegments[0] && !pathSegments[0].includes('.') ? pathSegments[0] : null);
+      const targetSlug = querySlug || pathSlug;
+
       try {
-        const res = await fetch('/api/public/churches');
-        if (res.ok) {
-          const data = await res.json();
-          setChurches(data);
-          const main = data.find((c: any) => c.isMain) || data[0];
-          if (main) {
-            setSelectedChurchId(main.id);
-            setChurch(main);
+        // Carrega todas as congregações
+        const allRes = await fetch('/api/public/churches');
+        let allChurches: any[] = [];
+        if (allRes.ok) {
+          allChurches = await allRes.json();
+          setChurches(allChurches);
+        }
+
+        // Se a URL especificou uma igreja independente:
+        if (targetSlug) {
+          setIsIndependentUrl(true);
+          const slugRes = await fetch(`/api/public/church?slug=${encodeURIComponent(targetSlug)}`);
+          if (slugRes.ok) {
+            const specificChurch = await slugRes.json();
+            setSelectedChurchId(specificChurch.id);
+            setChurch(specificChurch);
+            document.title = `${specificChurch.name} | ConectIgreja`;
+            return;
           }
         }
+
+        // Caso contrário, carrega a Sede ou a primeira congregação
+        const main = allChurches.find((c: any) => c.isMain) || allChurches[0];
+        if (main) {
+          setSelectedChurchId(main.id);
+          setChurch(main);
+          document.title = `${main.name} | ConectIgreja`;
+        }
       } catch (err) {
-        console.warn('Usando dados locais da congregação', err);
-        // Fallback elegante
-        const mockChurch = {
-          id: '1',
-          name: 'Igreja Conectada - Sede Central',
-          isMain: true,
-          pastorName: 'Pastor Samuel Oliveira',
-          phone: '5511988887777',
-          email: 'contato@conectigreja.cristhiansancore.com.br',
-          address: 'Av. das Nações, 1500',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          pixKey: 'contato@conectigreja.cristhiansancore.com.br',
-          pixType: 'E-mail',
-          pixRecipient: 'Igreja Conectada Sede',
-          instagramHandle: '@conectigreja.oficial',
-          facebookUrl: 'https://facebook.com',
-          welcomeMessage: 'Seja bem-vindo à nossa casa! Uma comunidade viva para você e toda a sua família.',
-        };
-        setChurches([mockChurch]);
-        setSelectedChurchId('1');
-        setChurch(mockChurch);
+        console.warn('Usando fallback da congregação', err);
       } finally {
         setLoading(false);
       }
     }
-    loadChurches();
+
+    initChurch();
   }, []);
 
-  // Carrega eventos, células e mídias quando mudar a igreja selecionada
+  // Carrega eventos, células e mídias exclusivos da igreja selecionada
   useEffect(() => {
     async function loadData() {
       if (!selectedChurchId) return;
@@ -88,7 +93,13 @@ export default function App() {
   const handleSelectChurch = (id: string) => {
     setSelectedChurchId(id);
     const found = churches.find((c) => c.id === id);
-    if (found) setChurch(found);
+    if (found) {
+      setChurch(found);
+      document.title = `${found.name} | ConectIgreja`;
+      // Atualiza a URL no navegador sem recarregar para manter URL independente
+      const newUrl = `${window.location.pathname}?igreja=${found.slug}`;
+      window.history.pushState({ path: newUrl }, '', newUrl);
+    }
   };
 
   const nextEvent = events.length > 0 ? events[0] : undefined;
@@ -98,7 +109,7 @@ export default function App() {
       <Navbar
         churchName={church?.name || 'ConectIgreja'}
         phone={church?.phone}
-        churches={churches}
+        churches={isIndependentUrl ? [church].filter(Boolean) : churches}
         selectedChurchId={selectedChurchId}
         onSelectChurch={handleSelectChurch}
       />
@@ -115,7 +126,7 @@ export default function App() {
 
         <LiveStream
           isLive={media?.live?.isLive || false}
-          liveUrl={media?.live?.liveUrl}
+          liveUrl={church?.youtubeLiveUrl || media?.live?.liveUrl}
           videoId={media?.live?.videoId}
           videos={media?.videos || []}
           channelId={church?.youtubeChannelId}
@@ -123,7 +134,7 @@ export default function App() {
 
         <Schedule
           events={events}
-          churchAddress={church?.address ? `${church.address}, ${church.neighborhood || ''}` : undefined}
+          churchAddress={church?.address ? `${church.address}, ${church.neighborhood || ''} - ${church.city || ''}` : undefined}
         />
 
         <FindCell cells={cells} />

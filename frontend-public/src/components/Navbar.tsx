@@ -51,8 +51,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </a>
 
-            {/* Dropdown de Congregações / Filiais */}
-            {churches.length > 1 && (
+            {/* Dropdown de Congregações / Filiais ou Selo de Congregação Local */}
+            {churches.length > 1 ? (
               <div className="hidden lg:flex items-center ml-4 pl-4 border-l border-slate-800">
                 <select
                   value={selectedChurchId}
@@ -65,6 +65,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </option>
                   ))}
                 </select>
+              </div>
+            ) : (
+              <div className="hidden lg:flex items-center ml-4 pl-4 border-l border-slate-800">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-sm">
+                  📍 Página Pública Oficial
+                </span>
               </div>
             )}
           </div>

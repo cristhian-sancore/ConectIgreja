@@ -16,6 +16,7 @@ export default function App() {
   const [selectedChurchId, setSelectedChurchId] = useState('');
   const [churches, setChurches] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
+  const [allMembers, setAllMembers] = useState<any[]>([]);
   const [cells, setCells] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -24,13 +25,23 @@ export default function App() {
   const [prayerRequests, setPrayerRequests] = useState<any[]>([]);
   const [evolutionStatus, setEvolutionStatus] = useState('open');
 
+  // Perfil do Usuário com Super Admin Estadual padrão
+  const [currentUser, setCurrentUser] = useState({
+    id: 'user-super-admin',
+    name: 'Cristhian Sancore',
+    email: 'cristhian@conectigreja.com.br',
+    role: 'SUPER_ADMIN_ESTADUAL',
+    title: 'Super Administrador Estadual',
+  });
+
   const loadAllData = async () => {
     try {
       const q = selectedChurchId ? `?churchId=${selectedChurchId}` : '';
 
-      const [cRes, mRes, cellRes, evRes, transRes, sumRes, bRes, pRes, stRes] = await Promise.all([
+      const [cRes, mRes, allMRes, cellRes, evRes, transRes, sumRes, bRes, pRes, stRes] = await Promise.all([
         fetch('/api/churches'),
         fetch(`/api/members${q}`),
+        fetch('/api/members'), // Membros globais para vinculação de qualquer igreja
         fetch(`/api/cells${q}`),
         fetch(`/api/events${q}`),
         fetch(`/api/finances/transactions${q}`),
@@ -42,6 +53,7 @@ export default function App() {
 
       if (cRes.ok) setChurches(await cRes.json());
       if (mRes.ok) setMembers(await mRes.json());
+      if (allMRes.ok) setAllMembers(await allMRes.json());
       if (cellRes.ok) setCells(await cellRes.json());
       if (evRes.ok) setEvents(await evRes.json());
       if (transRes.ok) setTransactions(await transRes.json());
@@ -113,6 +125,10 @@ export default function App() {
           onSelectChurch={setSelectedChurchId}
           todayBirthdaysCount={birthdays?.total || 0}
           onTriggerDailyBirthdays={handleTriggerDailyBirthdays}
+          currentUser={currentUser}
+          onSwitchUserRole={(role, name, title) =>
+            setCurrentUser((prev) => ({ ...prev, role, name, title }))
+          }
         />
 
         <main className="flex-1 p-6 sm:p-8 max-w-7xl w-full mx-auto">
@@ -166,6 +182,7 @@ export default function App() {
               churches={churches}
               currentSelectedChurchId={selectedChurchId}
               onSelectChurch={setSelectedChurchId}
+              currentUser={currentUser}
             />
           )}
 
@@ -185,6 +202,7 @@ export default function App() {
           {currentTab === 'churches' && (
             <Churches
               churches={churches}
+              allMembers={allMembers}
               onRefresh={loadAllData}
             />
           )}

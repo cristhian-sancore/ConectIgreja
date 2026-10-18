@@ -13,6 +13,13 @@ interface HeaderProps {
   onSelectChurch: (id: string) => void;
   todayBirthdaysCount?: number;
   onTriggerDailyBirthdays: () => Promise<void>;
+  currentUser?: {
+    name: string;
+    role: string;
+    title: string;
+    email?: string;
+  };
+  onSwitchUserRole?: (role: string, name: string, title: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,9 +28,19 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectChurch,
   todayBirthdaysCount = 0,
   onTriggerDailyBirthdays,
+  currentUser = {
+    name: 'Cristhian Sancore',
+    role: 'SUPER_ADMIN_ESTADUAL',
+    title: 'Super Administrador Estadual',
+    email: 'cristhian@conectigreja.com.br',
+  },
+  onSwitchUserRole,
 }) => {
   const [triggering, setTriggering] = useState(false);
   const [triggeredSuccess, setTriggeredSuccess] = useState(false);
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+
+  const isSuperAdmin = currentUser.role === 'SUPER_ADMIN_ESTADUAL' || currentUser.role === 'SUPER_ADMIN';
 
   const handleTrigger = async () => {
     setTriggering(true);
@@ -57,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
         </select>
       </div>
 
-      {/* Ações Rápidas */}
+      {/* Ações Rápidas & Perfil */}
       <div className="flex items-center gap-4">
         {/* Botão de Disparo do Robô de Aniversários */}
         <button
@@ -92,15 +109,103 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Perfil Pastoral */}
-        <div className="flex items-center gap-2.5 pl-4 border-l border-slate-800">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
-            P
-          </div>
-          <div className="hidden sm:block text-left">
-            <span className="text-xs font-bold text-white block leading-tight">Pastor Samuel</span>
-            <span className="text-[10px] text-slate-400">Pastor Presidente</span>
-          </div>
+        {/* Perfil do Usuário com Destaque para Super Admin */}
+        <div className="relative pl-4 border-l border-slate-800">
+          <button
+            onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+            className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-800/80 transition-all text-left group"
+          >
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg transition-transform group-hover:scale-105 ${
+              isSuperAdmin
+                ? 'bg-gradient-to-tr from-amber-500 to-orange-600 text-slate-950 shadow-amber-500/25 ring-2 ring-amber-400/50'
+                : 'bg-gradient-to-tr from-indigo-500 to-purple-600 text-white shadow-indigo-500/20'
+            }`}>
+              {isSuperAdmin ? '👑' : '👤'}
+            </div>
+            <div className="hidden sm:block text-left">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black text-white leading-tight">
+                  {currentUser.name}
+                </span>
+                {isSuperAdmin && (
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    SUPER ADMIN
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] text-slate-400 block">
+                {currentUser.title}
+              </span>
+            </div>
+          </button>
+
+          {/* Dropdown de Simulação / Alternância de Perfil */}
+          {isRoleDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-scaleUp">
+              <div className="px-3 py-2 border-b border-slate-800 mb-1">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Perfil de Acesso do Sistema
+                </span>
+                <span className="text-xs text-amber-300 font-semibold mt-0.5 block">
+                  {isSuperAdmin
+                    ? '👑 Apenas você pode cadastrar a Evolution em todas as igrejas'
+                    : '🔒 Perfil restrito a congregação local'}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <button
+                  onClick={() => {
+                    onSwitchUserRole?.(
+                      'SUPER_ADMIN_ESTADUAL',
+                      'Cristhian Sancore',
+                      'Super Administrador Estadual'
+                    );
+                    setIsRoleDropdownOpen(false);
+                  }}
+                  className={`w-full text-left p-2.5 rounded-xl text-xs transition-colors flex items-start gap-2.5 ${
+                    isSuperAdmin ? 'bg-amber-500/10 border border-amber-500/30' : 'hover:bg-slate-800 text-slate-300'
+                  }`}
+                >
+                  <span className="text-base mt-0.5">👑</span>
+                  <div>
+                    <div className="font-bold text-white flex items-center gap-1.5">
+                      <span>Super Admin Estadual</span>
+                      {isSuperAdmin && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />}
+                    </div>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                      Cristhian Sancore (Cadastra Evolution em todas as cidades)
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onSwitchUserRole?.(
+                      'PASTOR_LOCAL',
+                      'Pastor Marcos Silva',
+                      'Pastor da Filial Campinas'
+                    );
+                    setIsRoleDropdownOpen(false);
+                  }}
+                  className={`w-full text-left p-2.5 rounded-xl text-xs transition-colors flex items-start gap-2.5 ${
+                    currentUser.role === 'PASTOR_LOCAL' ? 'bg-indigo-500/10 border border-indigo-500/30' : 'hover:bg-slate-800 text-slate-300'
+                  }`}
+                >
+                  <span className="text-base mt-0.5">👤</span>
+                  <div>
+                    <div className="font-bold text-white flex items-center gap-1.5">
+                      <span>Pastor Local (Campinas)</span>
+                      {currentUser.role === 'PASTOR_LOCAL' && <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />}
+                    </div>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                      Acesso apenas à filial local (Bloqueado de criar Evolution)
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
