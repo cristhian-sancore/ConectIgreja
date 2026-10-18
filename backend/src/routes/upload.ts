@@ -34,10 +34,13 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
     const allowedMimes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'];
-    if (allowedMimes.includes(file.mimetype)) {
-      cb(null, true);
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedExts = ['.png', '.jpg', '.jpeg', '.svg', '.webp'];
+
+    if (!allowedExts.includes(ext) || !allowedMimes.includes(file.mimetype)) {
+      cb(new Error('Formato ou extensão não permitida. Apenas imagens (PNG, JPG, SVG, WebP) são aceitas.'));
     } else {
-      cb(new Error('Apenas imagens (PNG, JPG, SVG, WebP) são permitidas.'));
+      cb(null, true);
     }
   },
 });
@@ -51,6 +54,20 @@ router.post('/', upload.any(), (req, res) => {
     }
 
     const file = files[0];
+    const ext = path.extname(file.filename).toLowerCase();
+
+    // 🛡️ Proteção Anti-XSS para arquivos SVG:
+    if (ext === '.svg') {
+      const content = fs.readFileSync(file.path, 'utf8').toLowerCase();
+      const dangerousPatterns = ['<script', 'javascript:', 'onload=', 'onerror=', 'onclick=', '<iframe', '<embed', '<object'];
+      const hasDangerousContent = dangerousPatterns.some(pattern => content.includes(pattern));
+
+      if (hasDangerousContent) {
+        fs.unlinkSync(file.path); // Remove arquivo malicioso imediatamente
+        return res.status(400).json({ error: 'Arquivo SVG rejeitado: Contém elementos de script ou links executáveis não permitidos.' });
+      }
+    }
+
     const subfolder = file.fieldname === 'banner' || req.query.type === 'banner' ? 'banners' : 'logos';
     const publicUrl = `/uploads/${subfolder}/${file.filename}`;
     res.json({
@@ -77,8 +94,23 @@ router.post('/base64', async (req, res) => {
       return res.status(400).json({ error: 'String base64 inválida.' });
     }
 
-    const ext = matches[1].split('/')[1] === 'svg+xml' ? 'svg' : matches[1].split('/')[1] || 'png';
+    const mime = matches[1].toLowerCase();
+    const allowedMimes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp'];
+    if (!allowedMimes.includes(mime)) {
+      return res.status(400).json({ error: 'MIME type base64 não permitido.' });
+    }
+
+    const ext = mime === 'image/svg+xml' ? 'svg' : mime.split('/')[1] || 'png';
     const buffer = Buffer.from(matches[2], 'base64');
+
+    // Checagem Anti-XSS se for SVG
+    if (ext === 'svg') {
+      const text = buffer.toString('utf8').toLowerCase();
+      if (text.includes('<script') || text.includes('javascript:') || text.includes('onload=') || text.includes('onerror=')) {
+        return res.status(400).json({ error: 'SVG base64 contém scripts não permitidos.' });
+      }
+    }
+
     const uniqueName = `logo-${Date.now()}-${Math.round(Math.random() * 1e6)}.${ext}`;
     const filePath = path.join(logosDir, uniqueName);
 

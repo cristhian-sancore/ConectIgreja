@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
 import prisma from '../prisma';
 
 const router = Router();
@@ -7,7 +8,7 @@ const router = Router();
 // USUÁRIOS
 // ==========================================
 
-// Listar todos os usuários
+// Listar todos os usuários (OMITE A SENHA PARA SEGURANÇA)
 router.get('/', async (req, res) => {
   try {
     const { churchId, role, status } = req.query;
@@ -20,7 +21,17 @@ router.get('/', async (req, res) => {
     const users = await prisma.user.findMany({
       where,
       orderBy: { name: 'asc' },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        groupId: true,
+        churchId: true,
+        createdAt: true,
+        updatedAt: true,
         church: { select: { id: true, name: true, city: true } },
         group: { select: { id: true, name: true, permissions: true } },
       },
@@ -32,7 +43,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Criar novo usuário
+// Criar novo usuário (Com senha protegida por bcrypt)
 router.post('/', async (req, res) => {
   try {
     const { name, email, password, phone, role, groupId, churchId, status } = req.body;
@@ -41,18 +52,29 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Nome e E-mail são obrigatórios.' });
     }
 
+    const cleanPass = password || '123456';
+    const hashedPassword = await bcrypt.hash(cleanPass, 10);
+
     const user = await prisma.user.create({
       data: {
         name,
-        email,
-        password: password || '123456',
+        email: String(email).trim().toLowerCase(),
+        password: hashedPassword,
         phone,
         role: role || 'PASTOR_CIDADE',
         groupId: groupId || null,
         churchId: churchId || null, // null = Acesso Estadual (todas as cidades)
         status: status || 'ATIVO',
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        groupId: true,
+        churchId: true,
         church: { select: { name: true } },
         group: { select: { name: true } },
       },
@@ -69,19 +91,32 @@ router.put('/:id', async (req, res) => {
   try {
     const { name, email, password, phone, role, groupId, churchId, status } = req.body;
 
+    const dataToUpdate: any = {
+      name,
+      email: email ? String(email).trim().toLowerCase() : undefined,
+      phone,
+      role,
+      groupId: groupId || null,
+      churchId: churchId === '' ? null : churchId,
+      status,
+    };
+
+    if (password && String(password).trim().length > 0) {
+      dataToUpdate.password = await bcrypt.hash(String(password).trim(), 10);
+    }
+
     const updated = await prisma.user.update({
       where: { id: req.params.id },
-      data: {
-        name,
-        email,
-        phone,
-        role,
-        groupId: groupId || null,
-        churchId: churchId === '' ? null : churchId,
-        status,
-        ...(password ? { password } : {}),
-      },
-      include: {
+      data: dataToUpdate,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        groupId: true,
+        churchId: true,
         church: { select: { name: true } },
         group: { select: { name: true } },
       },

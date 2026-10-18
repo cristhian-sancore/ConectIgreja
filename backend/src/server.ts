@@ -19,11 +19,42 @@ import reportsRoutes from './routes/reports';
 import uploadRoutes from './routes/upload';
 import authRoutes from './routes/auth';
 import { SchedulerService } from './services/scheduler';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+// 🛡️ Middlewares de Segurança OWASP (Headers HTTP)
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false,
+  })
+);
+
+// 🛡️ Proteção contra Força Bruta no Login
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 20, // Máximo 20 tentativas por IP
+  message: { error: 'Muitas tentativas de login incorretas. Por segurança, tente novamente em 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// 🛡️ Proteção Geral da API contra DoS
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minuto
+  max: 400, // Máximo 400 requisições por minuto
+  message: { error: 'Taxa limite de requisições excedida. Aguarde um momento.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(apiLimiter);
+app.use('/api/auth/login', loginLimiter);
 
 // Middlewares
 app.use(cors());
