@@ -141,7 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </a>
             )}
             <a
-              href="http://localhost:5173"
+              href="https://admin-conectigreja.cristhiansancore.com.br"
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-semibold shadow-md shadow-indigo-600/25 transition-all hover:scale-105"
@@ -235,7 +235,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <div className="pt-3 border-t border-slate-800 flex flex-col gap-2">
             <a
-              href="http://localhost:5173"
+              href="https://admin-conectigreja.cristhiansancore.com.br"
               target="_blank"
               rel="noreferrer"
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold"

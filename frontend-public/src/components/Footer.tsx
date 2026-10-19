@@ -115,7 +115,7 @@ export const Footer: React.FC<FooterProps> = ({
 
             <div className="pt-4 border-t border-slate-900">
               <a
-                href="http://localhost:5173"
+                href="https://admin-conectigreja.cristhiansancore.com.br"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-400 hover:text-indigo-300"
