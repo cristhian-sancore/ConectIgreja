@@ -1,6 +1,27 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: conectigreja_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: conectigreja
+      POSTGRES_PASSWORD: conectigreja_secret_pg_2026
+      POSTGRES_DB: conectigreja
+    volumes:
+      - conectigreja_pgdata:/var/lib/postgresql/data
+    networks:
+      rede:
+        aliases:
+          - conectigreja_postgres
+          - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conectigreja -d conectigreja"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     image: ghcr.io/cristhian-sancore/conectigreja-backend:latest
     build:
@@ -10,17 +31,19 @@ services:
     restart: always
     environment:
       - PORT=4000
-      - DATABASE_URL=file:/app/data/conectigreja.db
+      - DATABASE_URL=postgresql://conectigreja:conectigreja_secret_pg_2026@conectigreja_postgres:5432/conectigreja?schema=public
       - EVOLUTION_API_URL=https://api.cristhiansancore.com.br
       - EVOLUTION_API_KEY=EAC94E310E46-4D87-8AAD-4262C45AF665
       - EVOLUTION_INSTANCE=teste
       - PUBLIC_URL=https://conectigreja.cristhiansancore.com.br
       - JWT_SECRET=conectigreja-super-jwt-secret-production-token-2026
     volumes:
-      - conectigreja_db:/app/data
       - conectigreja_uploads:/app/uploads
     ports:
       - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       rede:
         aliases:
@@ -35,7 +58,7 @@ services:
     container_name: conectigreja_public
     restart: always
     ports:
-      - "3000:80"
+      - "3002:80"
     depends_on:
       - backend
     networks:
@@ -51,7 +74,7 @@ services:
     container_name: conectigreja_admin
     restart: always
     ports:
-      - "5173:80"
+      - "5174:80"
     depends_on:
       - backend
     networks:
@@ -60,8 +83,8 @@ services:
           - conectigreja_admin
 
 volumes:
-  conectigreja_db:
-    name: conectigreja_db
+  conectigreja_pgdata:
+    name: conectigreja_pgdata
   conectigreja_uploads:
     name: conectigreja_uploads
 
