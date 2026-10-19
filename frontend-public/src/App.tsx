@@ -19,10 +19,11 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isIndependentUrl, setIsIndependentUrl] = useState(false);
 
-  // Carrega a igreja baseada na URL independente (?igreja=slug ou /igreja/slug)
+  // Carrega a igreja baseada no domínio próprio ou na URL independente (?igreja=slug ou /igreja/slug)
   useEffect(() => {
     async function initChurch() {
-      // 1. Detecta slug na URL (ex: ?igreja=filial-esperanca ou /igreja/filial-esperanca ou /filial-esperanca)
+      // 1. Detecta domínio e slug na URL
+      const currentHost = window.location.hostname.toLowerCase();
       const searchParams = new URLSearchParams(window.location.search);
       const querySlug = searchParams.get('igreja') || searchParams.get('slug');
       const pathSegments = window.location.pathname.split('/').filter(Boolean);
@@ -38,7 +39,22 @@ export default function App() {
           setChurches(allChurches);
         }
 
-        // Se a URL especificou uma igreja independente:
+        // A. Se estiver acessando pelo link/domínio próprio exclusivo da filial (sem precisar de parâmetros)
+        const matchedByDomain = allChurches.find((c: any) => {
+          if (!c.customDomain) return false;
+          const cleanCustom = c.customDomain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/:.*/, '').toLowerCase();
+          return currentHost === cleanCustom || cleanCustom.includes(currentHost);
+        });
+
+        if (matchedByDomain) {
+          setIsIndependentUrl(true);
+          setSelectedChurchId(matchedByDomain.id);
+          setChurch(matchedByDomain);
+          document.title = `${matchedByDomain.name} | ConectIgreja`;
+          return;
+        }
+
+        // B. Se a URL especificou uma igreja por slug (fallback retrocompatível):
         if (targetSlug) {
           setIsIndependentUrl(true);
           const slugRes = await fetch(`/api/public/church?slug=${encodeURIComponent(targetSlug)}`);
@@ -51,7 +67,7 @@ export default function App() {
           }
         }
 
-        // Caso contrário, carrega a Sede ou a primeira congregação
+        // C. Caso contrário, carrega a Sede ou a primeira congregação
         const main = allChurches.find((c: any) => c.isMain) || allChurches[0];
         if (main) {
           setSelectedChurchId(main.id);
@@ -94,9 +110,14 @@ export default function App() {
     setSelectedChurchId(id);
     const found = churches.find((c) => c.id === id);
     if (found) {
+      // Se a filial possui link próprio cadastrado, navega diretamente para o domínio dela
+      if (found.customDomain) {
+        const targetUrl = found.customDomain.startsWith('http') ? found.customDomain : `https://${found.customDomain}`;
+        window.location.href = targetUrl;
+        return;
+      }
       setChurch(found);
       document.title = `${found.name} | ConectIgreja`;
-      // Atualiza a URL no navegador sem recarregar para manter URL independente
       const newUrl = `${window.location.pathname}?igreja=${found.slug}`;
       window.history.pushState({ path: newUrl }, '', newUrl);
     }

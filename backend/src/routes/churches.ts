@@ -62,6 +62,7 @@ router.post('/', async (req, res) => {
       data: {
         name: data.name,
         slug,
+        customDomain: data.customDomain || null,
         isMain: data.isMain || false,
         pastorName: data.pastorName,
         phone: data.phone,

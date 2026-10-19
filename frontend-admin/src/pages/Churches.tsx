@@ -50,6 +50,7 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
+    customDomain: '',
     isMain: false,
     logoUrl: '',
     pastorName: '',
@@ -107,6 +108,7 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
     setFormData({
       name: '',
       slug: '',
+      customDomain: '',
       isMain: false,
       logoUrl: '',
       pastorName: '',
@@ -136,6 +138,7 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
     setFormData({
       name: c.name,
       slug: c.slug,
+      customDomain: c.customDomain || '',
       isMain: c.isMain,
       logoUrl: c.logoUrl || '',
       pastorName: c.pastorName || '',
@@ -185,14 +188,21 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
     }
   };
 
-  const getPublicUrl = (slug: string) => {
-    return `http://localhost:3000/?igreja=${slug}`;
+  const getPublicUrl = (church: any) => {
+    if (church?.customDomain) {
+      return church.customDomain.startsWith('http') ? church.customDomain : `https://${church.customDomain}`;
+    }
+    const origin = window.location.origin;
+    if (origin.includes('admin-conectigreja') || origin.includes('conectigreja')) {
+      return `https://conectigreja.cristhiansancore.com.br/?igreja=${church?.slug || ''}`;
+    }
+    return `http://localhost:3000/?igreja=${church?.slug || ''}`;
   };
 
-  const handleCopyUrl = (slug: string) => {
-    const url = getPublicUrl(slug);
+  const handleCopyUrl = (church: any) => {
+    const url = getPublicUrl(church);
     navigator.clipboard.writeText(url);
-    setCopiedSlug(slug);
+    setCopiedSlug(church.id || church.slug);
     setTimeout(() => setCopiedSlug(null), 3000);
   };
 
@@ -252,7 +262,7 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {churches.map((c) => {
           const membersList = c.members || [];
-          const publicUrl = getPublicUrl(c.slug);
+          const publicUrl = getPublicUrl(c);
 
           return (
             <div
@@ -295,15 +305,23 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
                 {/* Box de URL Pública Independente */}
                 <div className="p-3.5 rounded-xl bg-slate-950/80 border border-indigo-500/30 mb-4">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Globe className="w-3.5 h-3.5" />
-                      URL Pública Independente:
+                    <span className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Globe className={`w-3.5 h-3.5 ${c.customDomain ? 'text-emerald-400' : 'text-indigo-400'}`} />
+                      {c.customDomain ? (
+                        <span className="text-emerald-400 font-black">
+                          ✨ Link Próprio Exclusivo da Filial:
+                        </span>
+                      ) : (
+                        <span className="text-indigo-400">
+                          URL Pública Independente:
+                        </span>
+                      )}
                     </span>
                     <button
-                      onClick={() => handleCopyUrl(c.slug)}
+                      onClick={() => handleCopyUrl(c)}
                       className="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold"
                     >
-                      {copiedSlug === c.slug ? (
+                      {copiedSlug === (c.id || c.slug) ? (
                         <>
                           <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                           Copiado!
@@ -318,7 +336,7 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
-                    <code className="text-xs font-mono text-slate-300 truncate font-medium">
+                    <code className={`text-xs font-mono truncate font-medium ${c.customDomain ? 'text-emerald-300' : 'text-slate-300'}`}>
                       {publicUrl}
                     </code>
                     <a
@@ -561,6 +579,29 @@ export const Churches: React.FC<ChurchesPageProps> = ({ churches, allMembers = [
                       onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                       className="w-full bg-slate-900 text-amber-300 px-3.5 py-2.5 rounded-xl border border-slate-700 text-xs font-mono font-medium focus:border-amber-500 focus:outline-none"
                     />
+                  </div>
+
+                  <div className="sm:col-span-2 p-3.5 rounded-xl bg-slate-900/90 border border-emerald-500/30">
+                    <label className="block text-xs font-semibold text-emerald-400 mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 font-bold">
+                        <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                        Link Próprio / Domínio Oficial da Filial (Exclusivo)
+                      </span>
+                      <span className="text-[10px] text-emerald-300/80 font-mono">
+                        Acesso direto sem /filial ou parâmetros
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: https://esperanca.conectigreja.cristhiansancore.com.br ou https://igrejacampinas.com.br"
+                      value={formData.customDomain}
+                      onChange={(e) => setFormData({ ...formData, customDomain: e.target.value })}
+                      className="w-full bg-slate-950 text-emerald-300 px-3.5 py-2.5 rounded-xl border border-emerald-500/40 text-xs font-medium focus:border-emerald-400 focus:outline-none placeholder:text-slate-600 font-mono"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1">
+                      <span>💡</span>
+                      <span>Se preenchido, a filial terá este link exclusivo para divulgar aos membros, abrindo diretamente a página dela sem parâmetros na URL.</span>
+                    </p>
                   </div>
                 </div>
 

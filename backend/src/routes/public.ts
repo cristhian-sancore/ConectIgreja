@@ -7,15 +7,31 @@ const router = Router();
 // Informações da Igreja Principal (ou por query ?slug=...)
 router.get('/church', async (req, res) => {
   try {
-    const { slug } = req.query;
+    const { slug, domain } = req.query;
     let church = null;
 
-    if (slug) {
+    // 1. Busca por domínio ou link próprio da filial
+    const rawDomain = String(domain || req.headers['x-forwarded-host'] || req.headers.host || '');
+    const cleanDomain = rawDomain.replace(/^https?:\/\//, '').replace(/:.*/, '').replace(/\/.*$/, '').toLowerCase();
+
+    if (cleanDomain && !cleanDomain.includes('localhost') && !cleanDomain.startsWith('127.')) {
+      church = await prisma.church.findFirst({
+        where: {
+          customDomain: {
+            contains: cleanDomain,
+          },
+        },
+      });
+    }
+
+    // 2. Se não encontrou por domínio, busca pelo slug
+    if (!church && slug) {
       church = await prisma.church.findUnique({
         where: { slug: String(slug) },
       });
     }
 
+    // 3. Fallback: Sede Matriz
     if (!church) {
       church = await prisma.church.findFirst({
         where: { isMain: true },
@@ -61,6 +77,7 @@ router.get('/churches', async (req, res) => {
         id: true,
         name: true,
         slug: true,
+        customDomain: true,
         isMain: true,
         pastorName: true,
         phone: true,

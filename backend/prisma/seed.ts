@@ -51,6 +51,7 @@ async function main() {
     data: {
       name: 'Igreja Conectada - Filial Esperança',
       slug: 'filial-esperanca',
+      customDomain: 'https://esperanca.conectigreja.cristhiansancore.com.br',
       isMain: false,
       pastorName: 'Pastor Marcos Vinicius',
       phone: '5511977776666',

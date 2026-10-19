@@ -11,6 +11,7 @@ model Church {
   id                 String         @id @default(uuid())
   name               String
   slug               String         @unique
+  customDomain       String?        // Link próprio / Domínio exclusivo da filial
   isMain             Boolean        @default(false)
   pastorName         String?
   phone              String?
